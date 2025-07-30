@@ -26,8 +26,8 @@ const App = () => (
       <UserPreferencesProvider>
         <BudgetProvider>
           <TooltipProvider>
-            {/* Wrap these components in a React Fragment */}
-            <>
+            {/* Wrap these components in a single <div> element */}
+            <div>
               <Toaster />
               <Sonner />
               <BrowserRouter>
@@ -49,7 +49,7 @@ const App = () => (
                   </IncomeProvider>
                 </ExpenseProvider>
               </BrowserRouter>
-            </>
+            </div>
           </TooltipProvider>
         </BudgetProvider>
       </UserPreferencesProvider>
