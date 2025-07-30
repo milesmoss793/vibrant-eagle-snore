@@ -23,6 +23,11 @@ const MainLayout: React.FC = () => {
                   <Link to="/view-expenses">View Expenses</Link>
                 </Button>
               </li>
+              <li>
+                <Button variant="ghost" asChild>
+                  <Link to="/expense-summary">Summary</Link>
+                </Button>
+              </li>
             </ul>
           </nav>
         </div>
