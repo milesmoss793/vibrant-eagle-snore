@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, CalendarIcon } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,16 +31,31 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import EditIncomeDialog from "@/components/EditIncomeDialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { DateRange } from "react-day-picker";
+import { cn } from "@/lib/utils";
 
 type SortKey = "date" | "source" | "amount";
 type SortOrder = "asc" | "desc";
+
+const incomeSources = [
+  "Salary",
+  "Freelance",
+  "Investment",
+  "Gift",
+  "Refund",
+  "Other",
+];
 
 const ViewIncome: React.FC = () => {
   const { income, deleteIncome } = useIncome();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedIncomeEntry, setSelectedIncomeEntry] = useState<Income | null>(null);
   const [sortBy, setSortBy] = useState<SortKey>("date");
-  const [sortOrder, setSortOrder] = useState<SortOrder>("desc"); // Default to descending date
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+  const [selectedSource, setSelectedSource] = useState<string>("all");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
   const handleDelete = (id: string) => {
     deleteIncome(id);
@@ -51,9 +66,29 @@ const ViewIncome: React.FC = () => {
     setIsEditDialogOpen(true);
   };
 
-  const sortedIncome = useMemo(() => {
-    const sortableIncome = [...income];
-    sortableIncome.sort((a, b) => {
+  const filteredAndSortedIncome = useMemo(() => {
+    let currentIncome = [...income];
+
+    // Apply source filter
+    if (selectedSource !== "all") {
+      currentIncome = currentIncome.filter(
+        (entry) => entry.source === selectedSource
+      );
+    }
+
+    // Apply date range filter
+    if (dateRange?.from) {
+      currentIncome = currentIncome.filter((entry) => {
+        const incomeDate = new Date(entry.date.getFullYear(), entry.date.getMonth(), entry.date.getDate());
+        const fromDate = new Date(dateRange.from.getFullYear(), dateRange.from.getMonth(), dateRange.from.getDate());
+        const toDate = dateRange.to ? new Date(dateRange.to.getFullYear(), dateRange.to.getMonth(), dateRange.to.getDate()) : fromDate;
+        
+        return incomeDate >= fromDate && incomeDate <= toDate;
+      });
+    }
+
+    // Apply sorting
+    currentIncome.sort((a, b) => {
       let compareValue = 0;
       if (sortBy === "date") {
         compareValue = a.date.getTime() - b.date.getTime();
@@ -64,15 +99,64 @@ const ViewIncome: React.FC = () => {
       }
       return sortOrder === "asc" ? compareValue : -compareValue;
     });
-    return sortableIncome;
-  }, [income, sortBy, sortOrder]);
+    return currentIncome;
+  }, [income, selectedSource, dateRange, sortBy, sortOrder]);
 
   return (
     <div className="flex justify-center py-8">
       <Card className="w-full max-w-4xl">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-center">All Income</CardTitle>
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={selectedSource} onValueChange={setSelectedSource}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="Filter by Source" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Sources</SelectItem>
+                {incomeSources.map((source) => (
+                  <SelectItem key={source} value={source}>
+                    {source}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  id="date"
+                  variant={"outline"}
+                  className={cn(
+                    "w-[200px] justify-start text-left font-normal",
+                    !dateRange && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dateRange?.from ? (
+                    dateRange.to ? (
+                      <>
+                        {format(dateRange.from, "LLL dd, y")} -{" "}
+                        {format(dateRange.to, "LLL dd, y")}
+                      </>
+                    ) : (
+                      format(dateRange.from, "LLL dd, y")
+                    )
+                  ) : (
+                    <span>Filter by Date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={dateRange?.from}
+                  selected={dateRange}
+                  onSelect={setDateRange}
+                  numberOfMonths={2}
+                />
+              </PopoverContent>
+            </Popover>
             <Select value={sortBy} onValueChange={(value: SortKey) => setSortBy(value)}>
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="Sort by" />
@@ -95,8 +179,8 @@ const ViewIncome: React.FC = () => {
           </div>
         </CardHeader>
         <CardContent>
-          {income.length === 0 ? (
-            <p className="text-center text-muted-foreground">No income recorded yet. Add some!</p>
+          {filteredAndSortedIncome.length === 0 ? (
+            <p className="text-center text-muted-foreground py-4">No income found for the selected filters.</p>
           ) : (
             <div className="overflow-x-auto">
               <Table>
@@ -110,7 +194,7 @@ const ViewIncome: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sortedIncome.map((entry) => (
+                  {filteredAndSortedIncome.map((entry) => (
                     <TableRow key={entry.id}>
                       <TableCell>{format(entry.date, "PPP")}</TableCell>
                       <TableCell>{entry.source}</TableCell>
