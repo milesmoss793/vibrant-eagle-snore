@@ -25,31 +25,29 @@ const App = () => (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <UserPreferencesProvider>
         <BudgetProvider>
+          {/* Moved Toaster and Sonner outside TooltipProvider */}
+          <Toaster />
+          <Sonner />
           <TooltipProvider>
-            {/* Wrap these components in a single <div> element */}
-            <div>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <ExpenseProvider>
-                  <IncomeProvider>
-                    <Routes>
-                      <Route path="/" element={<MainLayout />}>
-                        <Route index element={<Index />} />
-                        <Route path="add-expense" element={<AddExpense />} />
-                        <Route path="view-expenses" element={<ViewExpenses />} />
-                        <Route path="add-income" element={<AddIncome />} />
-                        <Route path="view-income" element={<ViewIncome />} />
-                        <Route path="expense-summary" element={<ExpenseSummary />} />
-                        <Route path="manage-budgets" element={<ManageBudgets />} />
-                        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                        <Route path="*" element={<NotFound />} />
-                      </Route>
-                    </Routes>
-                  </IncomeProvider>
-                </ExpenseProvider>
-              </BrowserRouter>
-            </div>
+            <BrowserRouter>
+              <ExpenseProvider>
+                <IncomeProvider>
+                  <Routes>
+                    <Route path="/" element={<MainLayout />}>
+                      <Route index element={<Index />} />
+                      <Route path="add-expense" element={<AddExpense />} />
+                      <Route path="view-expenses" element={<ViewExpenses />} />
+                      <Route path="add-income" element={<AddIncome />} />
+                      <Route path="view-income" element={<ViewIncome />} />
+                      <Route path="expense-summary" element={<ExpenseSummary />} />
+                      <Route path="manage-budgets" element={<ManageBudgets />} />
+                      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                      <Route path="*" element={<NotFound />} />
+                    </Route>
+                  </Routes>
+                </IncomeProvider>
+              </ExpenseProvider>
+            </BrowserRouter>
           </TooltipProvider>
         </BudgetProvider>
       </UserPreferencesProvider>
