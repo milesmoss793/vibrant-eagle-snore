@@ -28,6 +28,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
+import { useExpenses } from "@/context/ExpenseContext"; // Added import
 
 const expenseFormSchema = z.object({
   amount: z.coerce.number().min(0.01, { message: "Amount must be positive." }),
@@ -52,6 +53,7 @@ const categories = [
 ];
 
 const AddExpense: React.FC = () => {
+  const { addExpense } = useExpenses(); // Added useExpenses hook
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseFormSchema),
     defaultValues: {
@@ -62,8 +64,7 @@ const AddExpense: React.FC = () => {
   });
 
   const onSubmit = (values: ExpenseFormValues) => {
-    // In a real app, you would send this data to a backend or store it locally
-    console.log("Expense submitted:", values);
+    addExpense(values); // Now correctly adding the expense
     toast({
       title: "Expense Added!",
       description: `Amount: $${values.amount.toFixed(2)}, Category: ${values.category}, Date: ${format(values.date, "PPP")}`,
