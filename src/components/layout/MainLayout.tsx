@@ -25,6 +25,16 @@ const MainLayout: React.FC = () => {
               </li>
               <li>
                 <Button variant="ghost" asChild>
+                  <Link to="/add-income">Add Income</Link>
+                </Button>
+              </li>
+              <li>
+                <Button variant="ghost" asChild>
+                  <Link to="/view-income">View Income</Link>
+                </Button>
+              </li>
+              <li>
+                <Button variant="ghost" asChild>
                   <Link to="/expense-summary">Summary</Link>
                 </Button>
               </li>
