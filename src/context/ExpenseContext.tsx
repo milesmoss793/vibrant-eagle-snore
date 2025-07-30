@@ -13,6 +13,8 @@ export interface Expense {
 interface ExpenseContextType {
   expenses: Expense[];
   addExpense: (expense: Omit<Expense, 'id'>) => void;
+  updateExpense: (updatedExpense: Expense) => void; // New: Function to update an expense
+  deleteExpense: (id: string) => void; // New: Function to delete an expense
 }
 
 // Create the context
@@ -54,8 +56,18 @@ export const ExpenseProvider: React.FC<{ children: ReactNode }> = ({ children })
     setExpenses((prevExpenses) => [...prevExpenses, expenseWithId]);
   };
 
+  const updateExpense = (updatedExpense: Expense) => {
+    setExpenses((prevExpenses) =>
+      prevExpenses.map((exp) => (exp.id === updatedExpense.id ? updatedExpense : exp))
+    );
+  };
+
+  const deleteExpense = (id: string) => {
+    setExpenses((prevExpenses) => prevExpenses.filter((exp) => exp.id !== id));
+  };
+
   return (
-    <ExpenseContext.Provider value={{ expenses, addExpense }}>
+    <ExpenseContext.Provider value={{ expenses, addExpense, updateExpense, deleteExpense }}>
       {children}
     </ExpenseContext.Provider>
   );

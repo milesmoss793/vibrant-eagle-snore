@@ -13,6 +13,8 @@ export interface Income {
 interface IncomeContextType {
   income: Income[];
   addIncome: (income: Omit<Income, 'id'>) => void;
+  updateIncome: (updatedIncome: Income) => void; // New: Function to update an income entry
+  deleteIncome: (id: string) => void; // New: Function to delete an income entry
 }
 
 // Create the context
@@ -54,8 +56,18 @@ export const IncomeProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setIncome((prevIncome) => [...prevIncome, incomeWithId]);
   };
 
+  const updateIncome = (updatedIncome: Income) => {
+    setIncome((prevIncome) =>
+      prevIncome.map((inc) => (inc.id === updatedIncome.id ? updatedIncome : inc))
+    );
+  };
+
+  const deleteIncome = (id: string) => {
+    setIncome((prevIncome) => prevIncome.filter((inc) => inc.id !== id));
+  };
+
   return (
-    <IncomeContext.Provider value={{ income, addIncome }}>
+    <IncomeContext.Provider value={{ income, addIncome, updateIncome, deleteIncome }}>
       {children}
     </IncomeContext.Provider>
   );
