@@ -28,7 +28,7 @@ const MainLayout: React.FC = () => {
               </span>
             </Button>
             <Link to="/" className="text-2xl font-bold tracking-tight">
-              Expense Tracker
+              Expense Tracker Pro 5000
             </Link>
           </div>
           {/* Horizontal navigation for larger screens */}
