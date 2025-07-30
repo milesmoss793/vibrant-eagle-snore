@@ -13,10 +13,8 @@ import ExpenseSummary from "./pages/ExpenseSummary";
 import { ExpenseProvider } from "./context/ExpenseContext";
 import { IncomeProvider } from "./context/IncomeContext";
 import { UserPreferencesProvider } from "./context/UserPreferencesContext";
-import { BudgetProvider } from "./context/BudgetContext";
 import AddIncome from "./pages/AddIncome";
 import ViewIncome from "./pages/ViewIncome";
-import ManageBudgets from "./pages/ManageBudgets";
 
 const queryClient = new QueryClient();
 
@@ -24,32 +22,28 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <UserPreferencesProvider>
-        <BudgetProvider>
-          {/* Moved Toaster and Sonner outside TooltipProvider */}
-          <Toaster />
-          <Sonner />
-          <TooltipProvider>
-            <BrowserRouter>
-              <ExpenseProvider>
-                <IncomeProvider>
-                  <Routes>
-                    <Route path="/" element={<MainLayout />}>
-                      <Route index element={<Index />} />
-                      <Route path="add-expense" element={<AddExpense />} />
-                      <Route path="view-expenses" element={<ViewExpenses />} />
-                      <Route path="add-income" element={<AddIncome />} />
-                      <Route path="view-income" element={<ViewIncome />} />
-                      <Route path="expense-summary" element={<ExpenseSummary />} />
-                      <Route path="manage-budgets" element={<ManageBudgets />} />
-                      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                      <Route path="*" element={<NotFound />} />
-                    </Route>
-                  </Routes>
-                </IncomeProvider>
-              </ExpenseProvider>
-            </BrowserRouter>
-          </TooltipProvider>
-        </BudgetProvider>
+        <Toaster />
+        <Sonner />
+        <TooltipProvider>
+          <BrowserRouter>
+            <ExpenseProvider>
+              <IncomeProvider>
+                <Routes>
+                  <Route path="/" element={<MainLayout />}>
+                    <Route index element={<Index />} />
+                    <Route path="add-expense" element={<AddExpense />} />
+                    <Route path="view-expenses" element={<ViewExpenses />} />
+                    <Route path="add-income" element={<AddIncome />} />
+                    <Route path="view-income" element={<ViewIncome />} />
+                    <Route path="expense-summary" element={<ExpenseSummary />} />
+                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    <Route path="*" element={<NotFound />} />
+                  </Route>
+                </Routes>
+              </IncomeProvider>
+            </ExpenseProvider>
+          </BrowserRouter>
+        </TooltipProvider>
       </UserPreferencesProvider>
     </ThemeProvider>
   </QueryClientProvider>

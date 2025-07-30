@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Home, DollarSign, TrendingUp, PlusCircle, Wallet, PiggyBank } from "lucide-react"; // Added PiggyBank icon
+import { Home, DollarSign, TrendingUp, PlusCircle, Wallet } from "lucide-react";
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { name: "Add Income", path: "/add-income", icon: Wallet },
     { name: "View Income", path: "/view-income", icon: TrendingUp },
     { name: "Summary", path: "/expense-summary", icon: Home },
-    { name: "Manage Budgets", path: "/manage-budgets", icon: PiggyBank }, // New Link
   ];
 
   return (

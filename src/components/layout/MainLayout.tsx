@@ -56,11 +56,6 @@ const MainLayout: React.FC = () => {
                   <Link to="/expense-summary">Summary</Link>
                 </Button>
               </li>
-              <li>
-                <Button variant="ghost" asChild>
-                  <Link to="/manage-budgets">Manage Budgets</Link> {/* New Link */}
-                </Button>
-              </li>
             </ul>
           </nav>
           {/* Theme and User Name Input for all screen sizes */}
