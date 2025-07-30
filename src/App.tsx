@@ -8,7 +8,7 @@ import NotFound from "./pages/NotFound";
 import MainLayout from "./components/layout/MainLayout";
 import AddExpense from "./pages/AddExpense";
 import ViewExpenses from "./pages/ViewExpenses";
-import ExpenseSummary from "./pages/ExpenseSummary"; // Import the new page
+import ExpenseSummary from "./pages/ExpenseSummary";
 import { ExpenseProvider } from "./context/ExpenseContext";
 
 const queryClient = new QueryClient();
@@ -25,7 +25,7 @@ const App = () => (
               <Route index element={<Index />} />
               <Route path="add-expense" element={<AddExpense />} />
               <Route path="view-expenses" element={<ViewExpenses />} />
-              <Route path="expense-summary" element={<ExpenseSummary />} /> {/* Route for expense summary */}
+              <Route path="expense-summary" element={<ExpenseSummary />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Route>
