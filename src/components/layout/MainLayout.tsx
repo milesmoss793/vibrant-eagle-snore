@@ -12,8 +12,8 @@ const MainLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
-      <header className="bg-primary text-primary-foreground p-4 shadow-md">
-        <div className="container mx-auto flex justify-between items-center">
+      <header className="bg-primary text-primary-foreground py-4 shadow-md">
+        <div className="container mx-auto flex justify-between items-center h-16"> {/* Added h-16 for consistent height */}
           <div className="flex items-center">
             <Button
               variant="ghost"
@@ -24,42 +24,42 @@ const MainLayout: React.FC = () => {
               <Menu className="h-6 w-6" />
               <span className="sr-only">Toggle navigation</span>
             </Button>
-            <Link to="/" className="text-2xl font-bold">
+            <Link to="/" className="text-2xl font-bold tracking-tight"> {/* Added tracking-tight for a slightly tighter look */}
               Expense Tracker
             </Link>
           </div>
           {/* Horizontal navigation for larger screens */}
           <nav className="hidden lg:block">
-            <ul className="flex space-x-4">
+            <ul className="flex items-center space-x-6"> {/* Increased space-x for more separation */}
               <li>
-                <Button variant="ghost" asChild>
+                <Button variant="ghost" asChild className="text-lg px-4 py-2"> {/* Adjusted button size for nav items */}
                   <Link to="/add-expense">Add Expense</Link>
                 </Button>
               </li>
               <li>
-                <Button variant="ghost" asChild>
+                <Button variant="ghost" asChild className="text-lg px-4 py-2">
                   <Link to="/view-expenses">View Expenses</Link>
                 </Button>
               </li>
               <li>
-                <Button variant="ghost" asChild>
+                <Button variant="ghost" asChild className="text-lg px-4 py-2">
                   <Link to="/add-income">Add Income</Link>
                 </Button>
               </li>
               <li>
-                <Button variant="ghost" asChild>
+                <Button variant="ghost" asChild className="text-lg px-4 py-2">
                   <Link to="/view-income">View Income</Link>
                 </Button>
               </li>
               <li>
-                <Button variant="ghost" asChild>
+                <Button variant="ghost" asChild className="text-lg px-4 py-2">
                   <Link to="/expense-summary">Summary</Link>
                 </Button>
               </li>
             </ul>
           </nav>
           {/* Theme and User Name Input for all screen sizes */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4"> {/* Adjusted space-x for better spacing */}
             <div className="hidden lg:block">
               <UserNameInput />
             </div>
