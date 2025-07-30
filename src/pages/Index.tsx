@@ -1,11 +1,15 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useUserPreferences } from "@/context/UserPreferencesContext"; // New import
 
 const Index = () => {
+  const { userName } = useUserPreferences();
+  const greetingName = userName ? `, ${userName}` : "";
+
   return (
     <div className="min-h-[calc(100vh-160px)] flex flex-col items-center justify-center bg-background text-foreground">
       <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Expense Tracker</h1>
+        <h1 className="text-4xl font-bold mb-4">Welcome{greetingName} to Your Expense Tracker</h1>
         <p className="text-xl text-muted-foreground mb-8">
           Manage your finances with ease.
         </p>
