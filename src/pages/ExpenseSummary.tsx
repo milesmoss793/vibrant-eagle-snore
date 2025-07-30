@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useExpenses } from "@/context/ExpenseContext";
-import { useIncome } from "@/context/IncomeContext"; // New import
+import { useIncome } from "@/context/IncomeContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -10,14 +10,45 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import ExpenseCharts from "@/components/charts/ExpenseCharts";
+import { format, startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear } from "date-fns";
+import { Expense } from "@/context/ExpenseContext";
+import { Income } from "@/context/IncomeContext";
 
 const ExpenseSummary: React.FC = () => {
   const { expenses } = useExpenses();
-  const { income } = useIncome(); // Use income context
+  const { income } = useIncome();
   const [timePeriod, setTimePeriod] = useState<"month" | "3months" | "year" | "all">("month");
 
-  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
-  const totalIncome = income.reduce((sum, entry) => sum + entry.amount, 0);
+  // Helper function to filter data based on time period
+  const filterDataByTimePeriod = <T extends { date: Date }>(data: T[], period: "month" | "3months" | "year" | "all"): T[] => {
+    const now = new Date();
+    let startDate: Date | null = null;
+    let endDate: Date | null = null;
+
+    if (period === "month") {
+      startDate = startOfMonth(now);
+      endDate = endOfMonth(now);
+    } else if (period === "3months") {
+      startDate = startOfMonth(subMonths(now, 2));
+      endDate = endOfMonth(now);
+    } else if (period === "year") {
+      startDate = startOfYear(now);
+      endDate = endOfYear(now);
+    } else {
+      return data; // "all" or default, no date filtering
+    }
+
+    return data.filter(
+      (item) =>
+        item.date >= startDate! && item.date <= endDate!
+    );
+  };
+
+  const filteredExpenses = filterDataByTimePeriod(expenses, timePeriod);
+  const filteredIncome = filterDataByTimePeriod(income, timePeriod);
+
+  const totalExpenses = filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+  const totalIncome = filteredIncome.reduce((sum, entry) => sum + entry.amount, 0);
   const netBalance = totalIncome - totalExpenses;
 
   return (
@@ -55,7 +86,7 @@ const ExpenseSummary: React.FC = () => {
                 </p>
               </Card>
             </div>
-            <ExpenseCharts expenses={expenses} timePeriod={timePeriod} />
+            <ExpenseCharts expenses={filteredExpenses} timePeriod={timePeriod} />
           </CardContent>
         </Card>
       </div>
