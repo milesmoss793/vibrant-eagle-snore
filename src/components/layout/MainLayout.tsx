@@ -4,6 +4,8 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import Sidebar from "./Sidebar"; // Import the new Sidebar component
+import { ThemeToggle } from "@/components/ThemeToggle"; // Import ThemeToggle
+import { UserNameInput } from "@/components/UserNameInput"; // Import UserNameInput
 
 const MainLayout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -56,6 +58,13 @@ const MainLayout: React.FC = () => {
               </li>
             </ul>
           </nav>
+          {/* Theme and User Name Input for all screen sizes */}
+          <div className="flex items-center space-x-4">
+            <div className="hidden lg:block"> {/* Only show UserNameInput on large screens */}
+              <UserNameInput />
+            </div>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
       <main className="flex-grow container mx-auto p-4">

@@ -4,8 +4,7 @@ import { Home, DollarSign, TrendingUp, PlusCircle, Wallet } from "lucide-react";
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { UserNameInput } from "@/components/UserNameInput";
+// Removed ThemeToggle and UserNameInput imports as they are now in MainLayout
 
 interface SidebarProps {
   isOpen: boolean;
@@ -44,12 +43,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             </Button>
           ))}
         </nav>
+        {/* Removed UserNameInput and ThemeToggle from here */}
         <div className="mt-auto space-y-4 border-t pt-4">
-          <UserNameInput />
-          <div className="flex justify-between items-center">
-            <span className="text-sm font-medium">Theme:</span>
-            <ThemeToggle />
-          </div>
+          <p className="text-sm text-muted-foreground">Navigation options.</p>
         </div>
       </SheetContent>
     </Sheet>
