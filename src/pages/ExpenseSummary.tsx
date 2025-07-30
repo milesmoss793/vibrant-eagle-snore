@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import ExpenseCharts from "@/components/charts/ExpenseCharts";
+import FinancialCharts from "@/components/charts/FinancialCharts"; // Updated import
 import { format, startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear } from "date-fns";
 import { Expense } from "@/context/ExpenseContext";
 import { Income } from "@/context/IncomeContext";
@@ -86,7 +86,7 @@ const ExpenseSummary: React.FC = () => {
                 </p>
               </Card>
             </div>
-            <ExpenseCharts expenses={filteredExpenses} timePeriod={timePeriod} />
+            <FinancialCharts expenses={filteredExpenses} income={filteredIncome} timePeriod={timePeriod} />
           </CardContent>
         </Card>
       </div>
