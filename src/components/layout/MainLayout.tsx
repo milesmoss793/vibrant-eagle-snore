@@ -3,9 +3,9 @@ import { Link, Outlet } from "react-router-dom";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
-import Sidebar from "./Sidebar"; // Import the new Sidebar component
-import { ThemeToggle } from "@/components/ThemeToggle"; // Import ThemeToggle
-import { UserNameInput } from "@/components/UserNameInput"; // Import UserNameInput
+import Sidebar from "./Sidebar";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { UserNameInput } from "@/components/UserNameInput";
 
 const MainLayout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -18,7 +18,7 @@ const MainLayout: React.FC = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="lg:hidden mr-2" // Show only on smaller screens
+              className="lg:hidden mr-2"
               onClick={() => setIsSidebarOpen(true)}
             >
               <Menu className="h-6 w-6" />
@@ -56,11 +56,16 @@ const MainLayout: React.FC = () => {
                   <Link to="/expense-summary">Summary</Link>
                 </Button>
               </li>
+              <li>
+                <Button variant="ghost" asChild>
+                  <Link to="/manage-budgets">Manage Budgets</Link> {/* New Link */}
+                </Button>
+              </li>
             </ul>
           </nav>
           {/* Theme and User Name Input for all screen sizes */}
           <div className="flex items-center space-x-4">
-            <div className="hidden lg:block"> {/* Only show UserNameInput on large screens */}
+            <div className="hidden lg:block">
               <UserNameInput />
             </div>
             <ThemeToggle />

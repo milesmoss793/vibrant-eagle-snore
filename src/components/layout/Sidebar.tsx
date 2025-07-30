@@ -1,10 +1,9 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Home, DollarSign, TrendingUp, PlusCircle, Wallet } from "lucide-react";
+import { Home, DollarSign, TrendingUp, PlusCircle, Wallet, PiggyBank } from "lucide-react"; // Added PiggyBank icon
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-// Removed ThemeToggle and UserNameInput imports as they are now in MainLayout
 
 interface SidebarProps {
   isOpen: boolean;
@@ -18,7 +17,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { name: "View Expenses", path: "/view-expenses", icon: DollarSign },
     { name: "Add Income", path: "/add-income", icon: Wallet },
     { name: "View Income", path: "/view-income", icon: TrendingUp },
-    { name: "Summary", path: "/expense-summary", icon: Home }, // Reusing Home icon for simplicity
+    { name: "Summary", path: "/expense-summary", icon: Home },
+    { name: "Manage Budgets", path: "/manage-budgets", icon: PiggyBank }, // New Link
   ];
 
   return (
@@ -43,7 +43,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             </Button>
           ))}
         </nav>
-        {/* Removed UserNameInput and ThemeToggle from here */}
         <div className="mt-auto space-y-4 border-t pt-4">
           <p className="text-sm text-muted-foreground">Navigation options.</p>
         </div>
