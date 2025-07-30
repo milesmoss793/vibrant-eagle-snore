@@ -53,9 +53,10 @@ const AddIncome: React.FC = () => {
   const form = useForm<IncomeFormValues>({
     resolver: zodResolver(incomeFormSchema),
     defaultValues: {
-      amount: 0,
+      amount: undefined, // Changed from 0 to undefined
       source: "",
       description: "",
+      date: undefined, // Changed from undefined to undefined for consistency
     },
   });
 
@@ -66,7 +67,7 @@ const AddIncome: React.FC = () => {
       description: `Amount: $${values.amount.toFixed(2)}, Source: ${values.source}, Date: ${format(values.date, "PPP")}`,
     });
     form.reset({
-      amount: 0,
+      amount: undefined, // Changed from 0 to undefined
       source: "",
       description: "",
       date: undefined,

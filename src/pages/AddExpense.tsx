@@ -57,9 +57,10 @@ const AddExpense: React.FC = () => {
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseFormSchema),
     defaultValues: {
-      amount: 0,
+      amount: undefined, // Changed from 0 to undefined
       category: "",
       description: "",
+      date: undefined, // Changed from undefined to undefined for consistency
     },
   });
 
@@ -70,7 +71,7 @@ const AddExpense: React.FC = () => {
       description: `Amount: $${values.amount.toFixed(2)}, Category: ${values.category}, Date: ${format(values.date, "PPP")}`,
     });
     form.reset({
-      amount: 0,
+      amount: undefined, // Changed from 0 to undefined
       category: "",
       description: "",
       date: undefined,
