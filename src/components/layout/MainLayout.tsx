@@ -56,7 +56,7 @@ const MainLayout: React.FC = () => {
               </li>
               <li>
                 <Button variant="ghost" asChild className="text-lg px-4 py-2">
-                  <Link to="/expense-summary">Summary</Link>
+                  <Link to="/dashboard">Dashboard</Link>
                 </Button>
               </li>
             </ul>

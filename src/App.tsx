@@ -9,7 +9,7 @@ import NotFound from "./pages/NotFound";
 import MainLayout from "./components/layout/MainLayout";
 import AddExpense from "./pages/AddExpense";
 import ViewExpenses from "./pages/ViewExpenses";
-import ExpenseSummary from "./pages/ExpenseSummary";
+import Dashboard from "./pages/Dashboard";
 import { ExpenseProvider } from "./context/ExpenseContext";
 import { IncomeProvider } from "./context/IncomeContext";
 import { UserPreferencesProvider } from "./context/UserPreferencesContext";
@@ -35,7 +35,7 @@ const App = () => (
                     <Route path="view-expenses" element={<ViewExpenses />} />
                     <Route path="add-income" element={<AddIncome />} />
                     <Route path="view-income" element={<ViewIncome />} />
-                    <Route path="expense-summary" element={<ExpenseSummary />} />
+                    <Route path="dashboard" element={<Dashboard />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Route>
