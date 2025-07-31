@@ -1,11 +1,16 @@
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom"; // Added Navigate
 import { Button } from "@/components/ui/button";
-import { useUserPreferences } from "@/context/UserPreferencesContext"; // New import
+import { useUserPreferences } from "@/context/UserPreferencesContext";
 
 const Index = () => {
   const { userName } = useUserPreferences();
   const greetingName = userName ? `, ${userName}` : "";
 
+  // Redirect to Dashboard
+  return <Navigate to="/dashboard" replace />;
+
+  // The original content below is now unreachable due to the redirect
+  /*
   return (
     <div className="min-h-[calc(100vh-160px)] flex flex-col items-center justify-center bg-background text-foreground">
       <div className="text-center">
@@ -24,6 +29,7 @@ const Index = () => {
       </div>
     </div>
   );
+  */
 };
 
 export default Index;

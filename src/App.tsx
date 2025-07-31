@@ -30,7 +30,7 @@ const App = () => (
               <IncomeProvider>
                 <Routes>
                   <Route path="/" element={<MainLayout />}>
-                    <Route index element={<Index />} />
+                    <Route index element={<Dashboard />} /> {/* Changed to Dashboard */}
                     <Route path="add-expense" element={<AddExpense />} />
                     <Route path="view-expenses" element={<ViewExpenses />} />
                     <Route path="add-income" element={<AddIncome />} />
