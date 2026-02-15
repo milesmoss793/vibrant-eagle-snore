@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from "react";
-import { useExpenses, Expense } from "@/context/ExpenseContext";
-import { useIncome, Income } from "@/context/IncomeContext";
+import { useExpenses } from "@/context/ExpenseContext";
+import { useIncome } from "@/context/IncomeContext";
 import { useBudgets } from "@/context/BudgetContext";
+import { useRecurring } from "@/context/RecurringContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -11,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import FinancialCharts from "@/components/charts/FinancialCharts";
-import { format, startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear } from "date-fns";
+import { format, startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear, addDays, isSameMonth } from "date-fns";
 import {
   Table,
   TableBody,
@@ -21,13 +22,49 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle } from "lucide-react";
+import { 
+  AlertCircle, 
+  TrendingDown, 
+  TrendingUp, 
+  CalendarDays, 
+  PieChart, 
+  PlusCircle, 
+  Wallet, 
+  ArrowRightLeft,
+  Utensils,
+  Car,
+  Zap,
+  ShoppingBag,
+  HeartPulse,
+  GraduationCap,
+  Home as HomeIcon,
+  Coffee,
+  MoreHorizontal
+} from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+
+const getCategoryIcon = (category: string) => {
+  const cat = category.toLowerCase();
+  if (cat.includes('food') || cat.includes('restaurant')) return <Utensils className="h-4 w-4" />;
+  if (cat.includes('transport') || cat.includes('car')) return <Car className="h-4 w-4" />;
+  if (cat.includes('utilit')) return <Zap className="h-4 w-4" />;
+  if (cat.includes('shop')) return <ShoppingBag className="h-4 w-4" />;
+  if (cat.includes('health')) return <HeartPulse className="h-4 w-4" />;
+  if (cat.includes('educat')) return <GraduationCap className="h-4 w-4" />;
+  if (cat.includes('rent') || cat.includes('home')) return <HomeIcon className="h-4 w-4" />;
+  if (cat.includes('coffee')) return <Coffee className="h-4 w-4" />;
+  if (cat.includes('salary') || cat.includes('income')) return <Wallet className="h-4 w-4" />;
+  return <MoreHorizontal className="h-4 w-4" />;
+};
 
 const Dashboard: React.FC = () => {
   const { expenses } = useExpenses();
   const { income } = useIncome();
   const { budgets } = useBudgets();
+  const { recurringTransactions } = useRecurring();
   const [timePeriod, setTimePeriod] = useState<"month" | "3months" | "6months" | "year" | "all">("month");
 
   const filterDataByTimePeriod = <T extends { date: Date }>(data: T[], period: string): T[] => {
@@ -60,6 +97,24 @@ const Dashboard: React.FC = () => {
   const totalExpenses = filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0);
   const totalIncome = filteredIncome.reduce((sum, entry) => sum + entry.amount, 0);
   const netBalance = totalIncome - totalExpenses;
+  const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpenses) / totalIncome) * 100 : 0;
+
+  // Monthly Comparison
+  const comparisonData = useMemo(() => {
+    const now = new Date();
+    const lastMonth = subMonths(now, 1);
+    
+    const thisMonthExpenses = expenses.filter(e => isSameMonth(e.date, now)).reduce((sum, e) => sum + e.amount, 0);
+    const lastMonthExpenses = expenses.filter(e => isSameMonth(e.date, lastMonth)).reduce((sum, e) => sum + e.amount, 0);
+    
+    const thisMonthIncome = income.filter(i => isSameMonth(i.date, now)).reduce((sum, i) => sum + i.amount, 0);
+    const lastMonthIncome = income.filter(i => isSameMonth(i.date, lastMonth)).reduce((sum, i) => sum + i.amount, 0);
+
+    return {
+      expenses: { current: thisMonthExpenses, previous: lastMonthExpenses, diff: thisMonthExpenses - lastMonthExpenses },
+      income: { current: thisMonthIncome, previous: lastMonthIncome, diff: thisMonthIncome - lastMonthIncome }
+    };
+  }, [expenses, income]);
 
   // Budget Alerts (Current Month Only)
   const budgetAlerts = useMemo(() => {
@@ -78,6 +133,24 @@ const Dashboard: React.FC = () => {
       return null;
     }).filter(Boolean);
   }, [budgets, expenses]);
+
+  // Top Spending Categories
+  const topCategories = useMemo(() => {
+    const categories: Record<string, number> = {};
+    filteredExpenses.forEach(e => {
+      categories[e.category] = (categories[e.category] || 0) + e.amount;
+    });
+    return Object.entries(categories)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5);
+  }, [filteredExpenses]);
+
+  // Upcoming Recurring Transactions
+  const upcomingRecurring = useMemo(() => {
+    return recurringTransactions
+      .filter(t => t.isActive)
+      .slice(0, 3);
+  }, [recurringTransactions]);
 
   // Recent Transactions
   const recentTransactions = useMemo(() => {
@@ -105,9 +178,12 @@ const Dashboard: React.FC = () => {
           </div>
         )}
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-2xl font-bold">Financial Overview</CardTitle>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+            <p className="text-muted-foreground">Welcome back! Here's your financial summary.</p>
+          </div>
+          <div className="flex items-center gap-2">
             <Select value={timePeriod} onValueChange={(value: any) => setTimePeriod(value)}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Select time period" />
@@ -120,66 +196,185 @@ const Dashboard: React.FC = () => {
                 <SelectItem value="all">All Time</SelectItem>
               </SelectContent>
             </Select>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-              <Card className="p-4">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Total Income</CardTitle>
-                <p className="text-2xl font-bold text-green-600">${totalIncome.toFixed(2)}</p>
-              </Card>
-              <Card className="p-4">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Total Expenses</CardTitle>
-                <p className="text-2xl font-bold text-red-600">${totalExpenses.toFixed(2)}</p>
-              </Card>
-              <Card className="p-4">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Net Balance</CardTitle>
-                <p className={`text-2xl font-bold ${netBalance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                  ${netBalance.toFixed(2)}
-                </p>
-              </Card>
-            </div>
+          </div>
+        </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Income</CardTitle>
+              <TrendingUp className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">${totalIncome.toFixed(2)}</div>
+              <div className="flex items-center gap-1 mt-1">
+                <Badge variant={comparisonData.income.diff >= 0 ? "default" : "destructive"} className="text-[10px] px-1 py-0">
+                  {comparisonData.income.diff >= 0 ? "+" : ""}{((comparisonData.income.diff / (comparisonData.income.previous || 1)) * 100).toFixed(0)}%
+                </Badge>
+                <span className="text-[10px] text-muted-foreground">vs last month</span>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
+              <TrendingDown className="h-4 w-4 text-red-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">${totalExpenses.toFixed(2)}</div>
+              <div className="flex items-center gap-1 mt-1">
+                <Badge variant={comparisonData.expenses.diff <= 0 ? "default" : "destructive"} className="text-[10px] px-1 py-0">
+                  {comparisonData.expenses.diff >= 0 ? "+" : ""}{((comparisonData.expenses.diff / (comparisonData.expenses.previous || 1)) * 100).toFixed(0)}%
+                </Badge>
+                <span className="text-[10px] text-muted-foreground">vs last month</span>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Net Balance</CardTitle>
+              <ArrowRightLeft className="h-4 w-4 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${netBalance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                ${netBalance.toFixed(2)}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Total savings/loss</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Savings Rate</CardTitle>
+              <PieChart className="h-4 w-4 text-primary" />
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="text-2xl font-bold">{savingsRate.toFixed(1)}%</div>
+              <Progress value={Math.max(0, Math.min(100, savingsRate))} className="h-2" />
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
             <FinancialCharts expenses={filteredExpenses} income={filteredIncome} timePeriod={timePeriod as any} />
-
+            
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Recent Transactions</CardTitle>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/view-expenses">View All</Link>
+                </Button>
               </CardHeader>
               <CardContent>
                 {recentTransactions.length === 0 ? (
                   <p className="text-center text-muted-foreground py-4">No transactions recorded yet.</p>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Category/Source</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {recentTransactions.map((t) => (
-                        <TableRow key={t.id}>
-                          <TableCell>{format(t.date, "MMM dd, yyyy")}</TableCell>
-                          <TableCell>
-                            <Badge variant={t.type === 'expense' ? 'destructive' : 'default'}>
-                              {t.type === 'expense' ? 'Expense' : 'Income'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{'category' in t ? t.category : t.source}</TableCell>
-                          <TableCell className={`text-right font-medium ${t.type === 'expense' ? 'text-red-600' : 'text-green-600'}`}>
-                            {t.type === 'expense' ? '-' : '+'}${t.amount.toFixed(2)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                  <div className="space-y-4">
+                    {recentTransactions.map((t) => (
+                      <div key={t.id} className="flex items-center justify-between p-2 hover:bg-muted/50 rounded-lg transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-full ${t.type === 'expense' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+                            {getCategoryIcon('category' in t ? t.category : t.source)}
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-medium text-sm">{'category' in t ? t.category : t.source}</span>
+                            <span className="text-xs text-muted-foreground">{format(t.date, "MMM dd, yyyy")}</span>
+                          </div>
+                        </div>
+                        <div className={`font-bold ${t.type === 'expense' ? 'text-red-600' : 'text-green-600'}`}>
+                          {t.type === 'expense' ? '-' : '+'}${t.amount.toFixed(2)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </CardContent>
             </Card>
-          </CardContent>
-        </Card>
+          </div>
+
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-2 gap-2">
+                <Button asChild className="w-full h-20 flex flex-col gap-1">
+                  <Link to="/add-expense">
+                    <PlusCircle className="h-5 w-5" />
+                    <span>Add Expense</span>
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" className="w-full h-20 flex flex-col gap-1">
+                  <Link to="/add-income">
+                    <Wallet className="h-5 w-5" />
+                    <span>Add Income</span>
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingDown className="h-5 w-5 text-red-600" />
+                  Top Spending
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {topCategories.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No expenses yet.</p>
+                ) : (
+                  topCategories.map(([category, amount]) => (
+                    <div key={category} className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          {getCategoryIcon(category)}
+                          <span className="font-medium">{category}</span>
+                        </div>
+                        <span>${amount.toFixed(2)}</span>
+                      </div>
+                      <Progress value={(amount / totalExpenses) * 100} className="h-1" />
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CalendarDays className="h-5 w-5 text-primary" />
+                  Upcoming Recurring
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {upcomingRecurring.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No active schedules.</p>
+                ) : (
+                  upcomingRecurring.map((t) => (
+                    <div key={t.id} className="flex items-center justify-between p-2 border rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-1.5 rounded-full ${t.type === 'expense' ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-500'}`}>
+                          {getCategoryIcon(t.categoryOrSource)}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium capitalize">{t.categoryOrSource}</span>
+                          <span className="text-[10px] text-muted-foreground capitalize">{t.frequency}</span>
+                        </div>
+                      </div>
+                      <div className={`text-sm font-bold ${t.type === 'expense' ? 'text-red-600' : 'text-green-600'}`}>
+                        ${t.amount.toFixed(2)}
+                      </div>
+                    </div>
+                  ))
+                )}
+                <Button variant="ghost" size="sm" className="w-full text-xs" asChild>
+                  <Link to="/recurring">Manage Schedules</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

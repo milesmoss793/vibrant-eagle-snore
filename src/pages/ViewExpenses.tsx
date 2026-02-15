@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, CalendarIcon } from "lucide-react";
+import { Edit, Trash2, CalendarIcon, Search } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +36,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
 
 type SortKey = "date" | "category" | "amount";
 type SortOrder = "asc" | "desc";
@@ -49,6 +50,7 @@ const ViewExpenses: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleDelete = (id: string) => {
     deleteExpense(id);
@@ -65,6 +67,15 @@ const ViewExpenses: React.FC = () => {
     if (selectedCategory !== "all") {
       currentExpenses = currentExpenses.filter(
         (expense) => expense.category === selectedCategory
+      );
+    }
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      currentExpenses = currentExpenses.filter(
+        (expense) => 
+          expense.description?.toLowerCase().includes(query) || 
+          expense.category.toLowerCase().includes(query)
       );
     }
 
@@ -90,17 +101,29 @@ const ViewExpenses: React.FC = () => {
       return sortOrder === "asc" ? compareValue : -compareValue;
     });
     return currentExpenses;
-  }, [expenses, selectedCategory, dateRange, sortBy, sortOrder]);
+  }, [expenses, selectedCategory, searchQuery, dateRange, sortBy, sortOrder]);
 
   return (
     <div className="flex justify-center py-8">
-      <Card className="w-full max-w-4xl">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-center">All Expenses</CardTitle>
+      <Card className="w-full max-w-5xl">
+        <CardHeader className="space-y-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <CardTitle>All Expenses</CardTitle>
+            <div className="relative w-full md:w-72">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search expenses..."
+                className="pl-8"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
               <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="Filter by Category" />
+                <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
@@ -170,7 +193,7 @@ const ViewExpenses: React.FC = () => {
         </CardHeader>
         <CardContent>
           {filteredAndSortedExpenses.length === 0 ? (
-            <p className="text-center text-muted-foreground py-4">No expenses found for the selected filters.</p>
+            <p className="text-center text-muted-foreground py-8">No expenses found for the selected filters.</p>
           ) : (
             <div className="overflow-x-auto">
               <Table>
@@ -188,8 +211,8 @@ const ViewExpenses: React.FC = () => {
                     <TableRow key={expense.id}>
                       <TableCell>{format(expense.date, "PPP")}</TableCell>
                       <TableCell>{expense.category}</TableCell>
-                      <TableCell className="text-right">${expense.amount.toFixed(2)}</TableCell>
-                      <TableCell>{expense.description || "-"}</TableCell>
+                      <TableCell className="text-right font-medium">${expense.amount.toFixed(2)}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">{expense.description || "-"}</TableCell>
                       <TableCell className="flex justify-center space-x-2">
                         <Button variant="outline" size="sm" onClick={() => handleEdit(expense)}>
                           <Edit className="h-4 w-4" />
