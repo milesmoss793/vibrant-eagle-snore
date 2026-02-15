@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
-import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import MainLayout from "./components/layout/MainLayout";
 import AddExpense from "./pages/AddExpense";
@@ -46,7 +45,6 @@ const App = () => (
                           <Route path="view-expenses" element={<ViewExpenses />} />
                           <Route path="add-income" element={<AddIncome />} />
                           <Route path="view-income" element={<ViewIncome />} />
-                          <Route path="dashboard" element={<Dashboard />} />
                           <Route path="settings" element={<Settings />} />
                           <Route path="recurring" element={<RecurringTransactions />} />
                           <Route path="budgets" element={<Budgets />} />

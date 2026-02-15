@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, Outlet } from "react-router-dom";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Button } from "@/components/ui/button";
-import { Menu, Settings, Repeat, PieChart } from "lucide-react";
+import { Menu, Settings, Repeat, PieChart, Home } from "lucide-react";
 import Sidebar from "./Sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { UserNameInput } from "@/components/UserNameInput";
@@ -26,7 +26,8 @@ const MainLayout: React.FC = () => {
                 <span className="sr-only">Toggle navigation</span>
               </span>
             </Button>
-            <Link to="/" className="text-2xl font-bold tracking-tight">
+            <Link to="/" className="text-2xl font-bold tracking-tight flex items-center gap-2">
+              <Home className="h-6 w-6" />
               Expense Tracker Pro 5000
             </Link>
           </div>
@@ -66,11 +67,6 @@ const MainLayout: React.FC = () => {
                     <Repeat className="h-3 w-3 mr-1" />
                     Recurring
                   </Link>
-                </Button>
-              </li>
-              <li>
-                <Button variant="ghost" asChild className="text-xs px-2 py-1">
-                  <Link to="/dashboard">Dashboard</Link>
                 </Button>
               </li>
               <li>

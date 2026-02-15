@@ -28,9 +28,9 @@ const Dashboard: React.FC = () => {
   const { expenses } = useExpenses();
   const { income } = useIncome();
   const { budgets } = useBudgets();
-  const [timePeriod, setTimePeriod] = useState<"month" | "3months" | "year" | "all">("month");
+  const [timePeriod, setTimePeriod] = useState<"month" | "3months" | "6months" | "year" | "all">("month");
 
-  const filterDataByTimePeriod = <T extends { date: Date }>(data: T[], period: "month" | "3months" | "year" | "all"): T[] => {
+  const filterDataByTimePeriod = <T extends { date: Date }>(data: T[], period: string): T[] => {
     const now = new Date();
     let startDate: Date | null = null;
     let endDate: Date | null = null;
@@ -40,6 +40,9 @@ const Dashboard: React.FC = () => {
       endDate = endOfMonth(now);
     } else if (period === "3months") {
       startDate = startOfMonth(subMonths(now, 2));
+      endDate = endOfMonth(now);
+    } else if (period === "6months") {
+      startDate = startOfMonth(subMonths(now, 5));
       endDate = endOfMonth(now);
     } else if (period === "year") {
       startDate = startOfYear(now);
@@ -104,7 +107,7 @@ const Dashboard: React.FC = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-2xl font-bold">Financial Dashboard</CardTitle>
+            <CardTitle className="text-2xl font-bold">Financial Overview</CardTitle>
             <Select value={timePeriod} onValueChange={(value: any) => setTimePeriod(value)}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Select time period" />
@@ -112,6 +115,7 @@ const Dashboard: React.FC = () => {
               <SelectContent>
                 <SelectItem value="month">This Month</SelectItem>
                 <SelectItem value="3months">Last 3 Months</SelectItem>
+                <SelectItem value="6months">Last 6 Months</SelectItem>
                 <SelectItem value="year">This Year</SelectItem>
                 <SelectItem value="all">All Time</SelectItem>
               </SelectContent>
@@ -135,7 +139,7 @@ const Dashboard: React.FC = () => {
               </Card>
             </div>
 
-            <FinancialCharts expenses={filteredExpenses} income={filteredIncome} timePeriod={timePeriod} />
+            <FinancialCharts expenses={filteredExpenses} income={filteredIncome} timePeriod={timePeriod as any} />
 
             <Card>
               <CardHeader>
