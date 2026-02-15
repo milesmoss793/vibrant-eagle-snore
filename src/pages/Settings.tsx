@@ -4,8 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
+import { X, Plus, Download, Upload, Database } from "lucide-react";
+import { toast } from "sonner";
 
 const Settings: React.FC = () => {
   const { 
@@ -24,7 +24,7 @@ const Settings: React.FC = () => {
     if (newExpenseCat.trim()) {
       addExpenseCategory(newExpenseCat.trim());
       setNewExpenseCat("");
-      toast({ title: "Category Added", description: `Added "${newExpenseCat}" to expenses.` });
+      toast.success(`Added "${newExpenseCat}" to expenses.`);
     }
   };
 
@@ -32,8 +32,58 @@ const Settings: React.FC = () => {
     if (newIncomeSrc.trim()) {
       addIncomeSource(newIncomeSrc.trim());
       setNewIncomeSrc("");
-      toast({ title: "Source Added", description: `Added "${newIncomeSrc}" to income.` });
+      toast.success(`Added "${newIncomeSrc}" to income.`);
     }
+  };
+
+  const handleExportData = () => {
+    const data = {
+      expenses: localStorage.getItem('expenseTrackerExpenses'),
+      income: localStorage.getItem('expenseTrackerIncome'),
+      categories: localStorage.getItem('expenseTracker_expenseCategories'),
+      sources: localStorage.getItem('expenseTracker_incomeSources'),
+      budgets: localStorage.getItem('expenseTracker_budgets'),
+      recurring: localStorage.getItem('expenseTracker_recurringTransactions'),
+      goals: localStorage.getItem('expenseTracker_goals'),
+      userName: localStorage.getItem('expenseTrackerUserName'),
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `expense-tracker-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("Data exported successfully!");
+  };
+
+  const handleImportData = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target?.result as string);
+        if (data.expenses) localStorage.setItem('expenseTrackerExpenses', data.expenses);
+        if (data.income) localStorage.setItem('expenseTrackerIncome', data.income);
+        if (data.categories) localStorage.setItem('expenseTracker_expenseCategories', data.categories);
+        if (data.sources) localStorage.setItem('expenseTracker_incomeSources', data.sources);
+        if (data.budgets) localStorage.setItem('expenseTracker_budgets', data.budgets);
+        if (data.recurring) localStorage.setItem('expenseTracker_recurringTransactions', data.recurring);
+        if (data.goals) localStorage.setItem('expenseTracker_goals', data.goals);
+        if (data.userName) localStorage.setItem('expenseTrackerUserName', data.userName);
+        
+        toast.success("Data imported successfully! Refreshing page...");
+        setTimeout(() => window.location.reload(), 1500);
+      } catch (err) {
+        toast.error("Failed to import data. Invalid file format.");
+      }
+    };
+    reader.readAsText(file);
   };
 
   return (
@@ -110,6 +160,38 @@ const Settings: React.FC = () => {
                     </Button>
                   </Badge>
                 ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Data Management */}
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Database className="h-5 w-5" />
+                Data Management
+              </CardTitle>
+              <CardDescription>Backup your data or restore from a previous backup.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col sm:flex-row gap-4">
+              <Button variant="outline" className="flex-1" onClick={handleExportData}>
+                <Download className="mr-2 h-4 w-4" />
+                Export Data (JSON)
+              </Button>
+              <div className="flex-1 relative">
+                <Input 
+                  type="file" 
+                  accept=".json" 
+                  className="hidden" 
+                  id="import-file" 
+                  onChange={handleImportData}
+                />
+                <Button variant="outline" className="w-full" asChild>
+                  <label htmlFor="import-file" className="cursor-pointer">
+                    <Upload className="mr-2 h-4 w-4" />
+                    Import Data (JSON)
+                  </label>
+                </Button>
               </div>
             </CardContent>
           </Card>

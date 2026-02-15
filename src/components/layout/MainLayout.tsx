@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, Outlet } from "react-router-dom";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Button } from "@/components/ui/button";
-import { Menu, Settings, Repeat, PieChart, Home } from "lucide-react";
+import { Menu, Settings, Repeat, PieChart, Home, Target } from "lucide-react";
 import Sidebar from "./Sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { UserNameInput } from "@/components/UserNameInput";
@@ -58,6 +58,14 @@ const MainLayout: React.FC = () => {
                   <Link to="/budgets">
                     <PieChart className="h-3 w-3 mr-1" />
                     Budgets
+                  </Link>
+                </Button>
+              </li>
+              <li>
+                <Button variant="ghost" asChild className="text-xs px-2 py-1">
+                  <Link to="/goals">
+                    <Target className="h-3 w-3 mr-1" />
+                    Goals
                   </Link>
                 </Button>
               </li>
