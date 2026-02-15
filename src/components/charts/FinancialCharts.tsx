@@ -1,9 +1,5 @@
 import React from "react";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
   CartesianGrid,
   Tooltip,
   Legend,
@@ -13,16 +9,29 @@ import {
   Cell,
   LineChart,
   Line,
+  XAxis,
+  YAxis,
 } from "recharts";
 import { Expense } from "@/context/ExpenseContext";
-import { Income } from "@/context/IncomeContext"; // Import Income type
-import { format, startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear, eachMonthOfInterval } from "date-fns";
+import { Income } from "@/context/IncomeContext";
+import { 
+  format, 
+  startOfMonth, 
+  endOfMonth, 
+  subMonths, 
+  startOfYear, 
+  endOfYear, 
+  eachMonthOfInterval, 
+  eachDayOfInterval,
+  isSameDay,
+  isSameMonth
+} from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface FinancialChartsProps {
   expenses: Expense[];
-  income: Income[]; // Add income prop
-  timePeriod: "month" | "3months" | "year" | "all";
+  income: Income[];
+  timePeriod: "month" | "3months" | "6months" | "year" | "all";
 }
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d", "#ffc658", "#d0ed57", "#a4de6c", "#f7b731"];
@@ -50,16 +59,16 @@ const FinancialCharts: React.FC<FinancialChartsProps> = ({ expenses, income, tim
     return acc;
   }, [] as { name: string; value: number }[]);
 
-  // Data for Monthly Trends (Line Chart) - Expenses & Income & Net Balance
-  const monthlyDataMap = new Map<string, { month: string; expenses: number; income: number; netBalance: number }>();
-
-  // Populate with all months in the interval for consistent data points
+  // Determine granularity: Daily for "month", Monthly for others
+  const isDaily = timePeriod === "month";
   const now = new Date();
   let startDateForInterval = startOfMonth(now);
   let endDateForInterval = endOfMonth(now);
 
   if (timePeriod === "3months") {
     startDateForInterval = startOfMonth(subMonths(now, 2));
+  } else if (timePeriod === "6months") {
+    startDateForInterval = startOfMonth(subMonths(now, 5));
   } else if (timePeriod === "year") {
     startDateForInterval = startOfYear(now);
   } else if (timePeriod === "all" && (expenses.length > 0 || income.length > 0)) {
@@ -70,40 +79,28 @@ const FinancialCharts: React.FC<FinancialChartsProps> = ({ expenses, income, tim
     }
   }
 
-  if (timePeriod !== "all" || (expenses.length > 0 || income.length > 0)) {
-    const months = eachMonthOfInterval({ start: startDateForInterval, end: endDateForInterval });
-    months.forEach(month => {
-      const monthYear = format(month, "MMM yyyy");
-      monthlyDataMap.set(monthYear, { month: monthYear, expenses: 0, income: 0, netBalance: 0 });
-    });
-  }
+  const intervals = isDaily 
+    ? eachDayOfInterval({ start: startDateForInterval, end: endDateForInterval })
+    : eachMonthOfInterval({ start: startDateForInterval, end: endDateForInterval });
 
-  expenses.forEach(expense => {
-    const monthYear = format(expense.date, "MMM yyyy");
-    const data = monthlyDataMap.get(monthYear);
-    if (data) {
-      data.expenses += expense.amount;
-      data.netBalance -= expense.amount;
-    }
+  const trendData = intervals.map(date => {
+    const label = isDaily ? format(date, "MMM dd") : format(date, "MMM yyyy");
+    
+    const periodExpenses = expenses.filter(e => 
+      isDaily ? isSameDay(e.date, date) : isSameMonth(e.date, date)
+    ).reduce((sum, e) => sum + e.amount, 0);
+
+    const periodIncome = income.filter(i => 
+      isDaily ? isSameDay(i.date, date) : isSameMonth(i.date, date)
+    ).reduce((sum, i) => sum + i.amount, 0);
+
+    return {
+      name: label,
+      expenses: periodExpenses,
+      income: periodIncome,
+      netBalance: periodIncome - periodExpenses
+    };
   });
-
-  income.forEach(entry => {
-    const monthYear = format(entry.date, "MMM yyyy");
-    const data = monthlyDataMap.get(monthYear);
-    if (data) {
-      data.income += entry.amount;
-      data.netBalance += entry.amount;
-    }
-  });
-
-  const monthlyFinancialData = Array.from(monthlyDataMap.values()).sort((a, b) => {
-    const dateA = new Date(a.month);
-    const dateB = new Date(b.month);
-    return dateA.getTime() - dateB.getTime();
-  });
-
-  const allExpenseCategories = Array.from(new Set(expenses.map(e => e.category)));
-  const allIncomeSources = Array.from(new Set(income.map(i => i.source)));
 
   const hasData = expenses.length > 0 || income.length > 0;
 
@@ -177,30 +174,28 @@ const FinancialCharts: React.FC<FinancialChartsProps> = ({ expenses, income, tim
         </Card>
       )}
 
-      {(expenses.length > 0 || income.length > 0) && (
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Monthly Financial Trends</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart
-                data={monthlyFinancialData}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis tickFormatter={(value) => `$${value}`} />
-                <Tooltip formatter={(value) => `$${(value as number).toFixed(2)}`} />
-                <Legend />
-                <Line type="monotone" dataKey="expenses" stroke="#FF8042" name="Expenses" activeDot={{ r: 8 }} />
-                <Line type="monotone" dataKey="income" stroke="#00C49F" name="Income" activeDot={{ r: 8 }} />
-                <Line type="monotone" dataKey="netBalance" stroke="#0088FE" name="Net Balance" activeDot={{ r: 8 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      )}
+      <Card className="lg:col-span-2">
+        <CardHeader>
+          <CardTitle>{isDaily ? "Daily" : "Monthly"} Financial Trends</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart
+              data={trendData}
+              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis tickFormatter={(value) => `$${value}`} />
+              <Tooltip formatter={(value) => `$${(value as number).toFixed(2)}`} />
+              <Legend />
+              <Line type="monotone" dataKey="expenses" stroke="#FF8042" name="Expenses" activeDot={{ r: 8 }} />
+              <Line type="monotone" dataKey="income" stroke="#00C49F" name="Income" activeDot={{ r: 8 }} />
+              <Line type="monotone" dataKey="netBalance" stroke="#0088FE" name="Net Balance" activeDot={{ r: 8 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
     </div>
   );
 };
