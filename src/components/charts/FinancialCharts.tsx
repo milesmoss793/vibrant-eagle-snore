@@ -214,9 +214,31 @@ const FinancialCharts: React.FC<FinancialChartsProps> = ({ expenses, income, tim
               <YAxis tickFormatter={(value) => `$${value}`} />
               <Tooltip formatter={(value) => `$${(value as number).toFixed(2)}`} />
               <Legend />
-              <Line type="monotone" dataKey="expenses" stroke="#FF8042" name={isDaily ? "Cumulative Expenses" : "Monthly Expenses"} activeDot={{ r: 8 }} />
-              <Line type="monotone" dataKey="income" stroke="#00C49F" name={isDaily ? "Cumulative Income" : "Monthly Income"} activeDot={{ r: 8 }} />
-              <Line type="stepAfter" dataKey="netBalance" stroke="#0088FE" name="Net Balance (Total)" strokeWidth={3} activeDot={{ r: 8 }} />
+              <Line 
+                type="monotone" 
+                dataKey="expenses" 
+                stroke="#FF8042" 
+                name={isDaily ? "Cumulative Expenses" : "Monthly Expenses"} 
+                dot={false}
+                activeDot={{ r: 6 }} 
+              />
+              <Line 
+                type="monotone" 
+                dataKey="income" 
+                stroke="#00C49F" 
+                name={isDaily ? "Cumulative Income" : "Monthly Income"} 
+                dot={false}
+                activeDot={{ r: 6 }} 
+              />
+              <Line 
+                type="stepAfter" 
+                dataKey="netBalance" 
+                stroke="#0088FE" 
+                name="Net Balance (Total)" 
+                strokeWidth={3} 
+                dot={false}
+                activeDot={{ r: 6 }} 
+              />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>

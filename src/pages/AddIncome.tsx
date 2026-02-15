@@ -49,7 +49,7 @@ const AddIncome: React.FC = () => {
       amount: undefined,
       source: "",
       description: "",
-      date: undefined,
+      date: new Date(),
     },
   });
 
@@ -63,7 +63,7 @@ const AddIncome: React.FC = () => {
       amount: undefined,
       source: "",
       description: "",
-      date: undefined,
+      date: new Date(),
     });
   };
 
@@ -83,7 +83,13 @@ const AddIncome: React.FC = () => {
                   <FormItem>
                     <FormLabel>Amount</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.01" placeholder="e.g., 1000.00" {...field} />
+                      <Input 
+                        type="number" 
+                        step="0.01" 
+                        placeholder="0.00" 
+                        className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
