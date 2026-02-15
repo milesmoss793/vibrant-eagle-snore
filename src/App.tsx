@@ -14,9 +14,12 @@ import { ExpenseProvider } from "./context/ExpenseContext";
 import { IncomeProvider } from "./context/IncomeContext";
 import { UserPreferencesProvider } from "./context/UserPreferencesContext";
 import { CategoryProvider } from "./context/CategoryContext";
+import { RecurringProvider } from "./context/RecurringContext";
 import AddIncome from "./pages/AddIncome";
 import ViewIncome from "./pages/ViewIncome";
 import Settings from "./pages/Settings";
+import RecurringTransactions from "./pages/RecurringTransactions";
+import RecurringManager from "./components/RecurringManager";
 
 const queryClient = new QueryClient();
 
@@ -25,28 +28,32 @@ const App = () => (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <UserPreferencesProvider>
         <CategoryProvider>
-          <Toaster />
-          <Sonner />
-          <TooltipProvider>
-            <BrowserRouter>
-              <ExpenseProvider>
-                <IncomeProvider>
-                  <Routes>
-                    <Route path="/" element={<MainLayout />}>
-                      <Route index element={<Dashboard />} />
-                      <Route path="add-expense" element={<AddExpense />} />
-                      <Route path="view-expenses" element={<ViewExpenses />} />
-                      <Route path="add-income" element={<AddIncome />} />
-                      <Route path="view-income" element={<ViewIncome />} />
-                      <Route path="dashboard" element={<Dashboard />} />
-                      <Route path="settings" element={<Settings />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Route>
-                  </Routes>
-                </IncomeProvider>
-              </ExpenseProvider>
-            </BrowserRouter>
-          </TooltipProvider>
+          <RecurringProvider>
+            <Toaster />
+            <Sonner />
+            <TooltipProvider>
+              <BrowserRouter>
+                <ExpenseProvider>
+                  <IncomeProvider>
+                    <RecurringManager />
+                    <Routes>
+                      <Route path="/" element={<MainLayout />}>
+                        <Route index element={<Dashboard />} />
+                        <Route path="add-expense" element={<AddExpense />} />
+                        <Route path="view-expenses" element={<ViewExpenses />} />
+                        <Route path="add-income" element={<AddIncome />} />
+                        <Route path="view-income" element={<ViewIncome />} />
+                        <Route path="dashboard" element={<Dashboard />} />
+                        <Route path="settings" element={<Settings />} />
+                        <Route path="recurring" element={<RecurringTransactions />} />
+                        <Route path="*" element={<NotFound />} />
+                      </Route>
+                    </Routes>
+                  </IncomeProvider>
+                </ExpenseProvider>
+              </BrowserRouter>
+            </TooltipProvider>
+          </RecurringProvider>
         </CategoryProvider>
       </UserPreferencesProvider>
     </ThemeProvider>

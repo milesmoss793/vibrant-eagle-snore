@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, Outlet } from "react-router-dom";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Button } from "@/components/ui/button";
-import { Menu, Settings } from "lucide-react";
+import { Menu, Settings, Repeat } from "lucide-react";
 import Sidebar from "./Sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { UserNameInput } from "@/components/UserNameInput";
@@ -31,36 +31,44 @@ const MainLayout: React.FC = () => {
             </Link>
           </div>
           <nav className="hidden lg:block">
-            <ul className="flex items-center space-x-6">
+            <ul className="flex items-center space-x-4">
               <li>
-                <Button variant="ghost" asChild className="text-lg px-4 py-2">
+                <Button variant="ghost" asChild className="text-sm px-3 py-2">
                   <Link to="/add-expense">Add Expense</Link>
                 </Button>
               </li>
               <li>
-                <Button variant="ghost" asChild className="text-lg px-4 py-2">
+                <Button variant="ghost" asChild className="text-sm px-3 py-2">
                   <Link to="/view-expenses">View Expenses</Link>
                 </Button>
               </li>
               <li>
-                <Button variant="ghost" asChild className="text-lg px-4 py-2">
+                <Button variant="ghost" asChild className="text-sm px-3 py-2">
                   <Link to="/add-income">Add Income</Link>
                 </Button>
               </li>
               <li>
-                <Button variant="ghost" asChild className="text-lg px-4 py-2">
+                <Button variant="ghost" asChild className="text-sm px-3 py-2">
                   <Link to="/view-income">View Income</Link>
                 </Button>
               </li>
               <li>
-                <Button variant="ghost" asChild className="text-lg px-4 py-2">
+                <Button variant="ghost" asChild className="text-sm px-3 py-2">
+                  <Link to="/recurring">
+                    <Repeat className="h-4 w-4 mr-1" />
+                    Recurring
+                  </Link>
+                </Button>
+              </li>
+              <li>
+                <Button variant="ghost" asChild className="text-sm px-3 py-2">
                   <Link to="/dashboard">Dashboard</Link>
                 </Button>
               </li>
               <li>
-                <Button variant="ghost" asChild className="text-lg px-4 py-2">
+                <Button variant="ghost" asChild className="text-sm px-3 py-2">
                   <Link to="/settings">
-                    <Settings className="h-5 w-5 mr-1" />
+                    <Settings className="h-4 w-4 mr-1" />
                     Settings
                   </Link>
                 </Button>
