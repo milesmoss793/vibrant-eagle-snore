@@ -89,6 +89,8 @@ const FinancialCharts: React.FC<FinancialChartsProps> = ({ expenses, income, tim
     .reduce((sum, e) => sum + e.amount, 0);
   
   let runningBalance = initialIncome - initialExpenses;
+  let runningExpenses = 0;
+  let runningIncome = 0;
 
   const intervals = isDaily 
     ? eachDayOfInterval({ start: startDateForInterval, end: endDateForInterval })
@@ -106,11 +108,21 @@ const FinancialCharts: React.FC<FinancialChartsProps> = ({ expenses, income, tim
     ).reduce((sum, i) => sum + i.amount, 0);
 
     runningBalance += (periodIncome - periodExpenses);
+    
+    if (isDaily) {
+      // Cumulative for the month
+      runningExpenses += periodExpenses;
+      runningIncome += periodIncome;
+    } else {
+      // Monthly totals (resets every month)
+      runningExpenses = periodExpenses;
+      runningIncome = periodIncome;
+    }
 
     return {
       name: label,
-      expenses: periodExpenses,
-      income: periodIncome,
+      expenses: runningExpenses,
+      income: runningIncome,
       netBalance: runningBalance
     };
   });
@@ -202,9 +214,9 @@ const FinancialCharts: React.FC<FinancialChartsProps> = ({ expenses, income, tim
               <YAxis tickFormatter={(value) => `$${value}`} />
               <Tooltip formatter={(value) => `$${(value as number).toFixed(2)}`} />
               <Legend />
-              <Line type="monotone" dataKey="expenses" stroke="#FF8042" name="Expenses" activeDot={{ r: 8 }} />
-              <Line type="monotone" dataKey="income" stroke="#00C49F" name="Income" activeDot={{ r: 8 }} />
-              <Line type="stepAfter" dataKey="netBalance" stroke="#0088FE" name="Net Balance (Cumulative)" strokeWidth={3} activeDot={{ r: 8 }} />
+              <Line type="monotone" dataKey="expenses" stroke="#FF8042" name={isDaily ? "Cumulative Expenses" : "Monthly Expenses"} activeDot={{ r: 8 }} />
+              <Line type="monotone" dataKey="income" stroke="#00C49F" name={isDaily ? "Cumulative Income" : "Monthly Income"} activeDot={{ r: 8 }} />
+              <Line type="stepAfter" dataKey="netBalance" stroke="#0088FE" name="Net Balance (Total)" strokeWidth={3} activeDot={{ r: 8 }} />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>
