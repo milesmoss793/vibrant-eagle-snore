@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { useExpenses, Expense } from "@/context/ExpenseContext";
 import { useIncome, Income } from "@/context/IncomeContext";
+import { useBudgets } from "@/context/BudgetContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -20,13 +21,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const Dashboard: React.FC = () => {
   const { expenses } = useExpenses();
   const { income } = useIncome();
+  const { budgets } = useBudgets();
   const [timePeriod, setTimePeriod] = useState<"month" | "3months" | "year" | "all">("month");
 
-  // Helper function to filter data based on time period
   const filterDataByTimePeriod = <T extends { date: Date }>(data: T[], period: "month" | "3months" | "year" | "all"): T[] => {
     const now = new Date();
     let startDate: Date | null = null;
@@ -42,13 +45,10 @@ const Dashboard: React.FC = () => {
       startDate = startOfYear(now);
       endDate = endOfYear(now);
     } else {
-      return data; // "all" or default, no date filtering
+      return data;
     }
 
-    return data.filter(
-      (item) =>
-        item.date >= startDate! && item.date <= endDate!
-    );
+    return data.filter((item) => item.date >= startDate! && item.date <= endDate!);
   };
 
   const filteredExpenses = filterDataByTimePeriod(expenses, timePeriod);
@@ -58,25 +58,54 @@ const Dashboard: React.FC = () => {
   const totalIncome = filteredIncome.reduce((sum, entry) => sum + entry.amount, 0);
   const netBalance = totalIncome - totalExpenses;
 
-  // Combine and sort recent transactions
-  const recentTransactions = useMemo(() => {
-    const allTransactions = [
-      ...filteredExpenses.map(exp => ({ ...exp, type: 'expense', categoryOrSource: exp.category })),
-      ...filteredIncome.map(inc => ({ ...inc, type: 'income', categoryOrSource: inc.source }))
-    ];
+  // Budget Alerts (Current Month Only)
+  const budgetAlerts = useMemo(() => {
+    const now = new Date();
+    const monthStart = startOfMonth(now);
+    const monthEnd = endOfMonth(now);
+    
+    return budgets.map(budget => {
+      const spent = expenses
+        .filter(e => e.category === budget.category && e.date >= monthStart && e.date <= monthEnd)
+        .reduce((sum, e) => sum + e.amount, 0);
+      
+      if (spent > budget.amount) {
+        return { category: budget.category, overBy: spent - budget.amount };
+      }
+      return null;
+    }).filter(Boolean);
+  }, [budgets, expenses]);
 
-    return allTransactions
-      .sort((a, b) => b.date.getTime() - a.date.getTime()) // Sort by date descending
-      .slice(0, 5); // Get top 5 recent transactions
-  }, [filteredExpenses, filteredIncome]);
+  // Recent Transactions
+  const recentTransactions = useMemo(() => {
+    const all = [
+      ...expenses.map(e => ({ ...e, type: 'expense' as const })),
+      ...income.map(i => ({ ...i, type: 'income' as const }))
+    ].sort((a, b) => b.date.getTime() - a.date.getTime());
+    return all.slice(0, 5);
+  }, [expenses, income]);
 
   return (
     <div className="flex justify-center py-8">
       <div className="w-full max-w-6xl space-y-6">
+        {budgetAlerts.length > 0 && (
+          <div className="space-y-2">
+            {budgetAlerts.map((alert: any) => (
+              <Alert key={alert.category} variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Budget Exceeded!</AlertTitle>
+                <AlertDescription>
+                  You've spent ${alert.overBy.toFixed(2)} more than your budget for <strong>{alert.category}</strong> this month.
+                </AlertDescription>
+              </Alert>
+            ))}
+          </div>
+        )}
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-2xl font-bold">Financial Dashboard</CardTitle>
-            <Select value={timePeriod} onValueChange={(value: "month" | "3months" | "year" | "all") => setTimePeriod(value)}>
+            <Select value={timePeriod} onValueChange={(value: any) => setTimePeriod(value)}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Select time period" />
               </SelectTrigger>
@@ -88,64 +117,60 @@ const Dashboard: React.FC = () => {
               </SelectContent>
             </Select>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
               <Card className="p-4">
-                <CardTitle className="text-lg font-semibold">Total Income</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total Income</CardTitle>
                 <p className="text-2xl font-bold text-green-600">${totalIncome.toFixed(2)}</p>
               </Card>
               <Card className="p-4">
-                <CardTitle className="text-lg font-semibold">Total Expenses</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total Expenses</CardTitle>
                 <p className="text-2xl font-bold text-red-600">${totalExpenses.toFixed(2)}</p>
               </Card>
               <Card className="p-4">
-                <CardTitle className="text-lg font-semibold">Net Balance</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">Net Balance</CardTitle>
                 <p className={`text-2xl font-bold ${netBalance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
                   ${netBalance.toFixed(2)}
                 </p>
               </Card>
             </div>
+
             <FinancialCharts expenses={filteredExpenses} income={filteredIncome} timePeriod={timePeriod} />
 
-            {/* New Recent Transactions Section */}
             <Card>
               <CardHeader>
                 <CardTitle>Recent Transactions</CardTitle>
               </CardHeader>
               <CardContent>
                 {recentTransactions.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-4">No recent transactions for the selected period.</p>
+                  <p className="text-center text-muted-foreground py-4">No transactions recorded yet.</p>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Category/Source</TableHead>
-                          <TableHead className="text-right">Amount</TableHead>
-                          <TableHead>Description</TableHead>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Category/Source</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {recentTransactions.map((t) => (
+                        <TableRow key={t.id}>
+                          <TableCell>{format(t.date, "MMM dd, yyyy")}</TableCell>
+                          <TableCell>
+                            <Badge variant={t.type === 'expense' ? 'destructive' : 'default'}>
+                              {t.type === 'expense' ? 'Expense' : 'Income'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{'category' in t ? t.category : t.source}</TableCell>
+                          <TableCell className={`text-right font-medium ${t.type === 'expense' ? 'text-red-600' : 'text-green-600'}`}>
+                            {t.type === 'expense' ? '-' : '+'}${t.amount.toFixed(2)}
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {recentTransactions.map((transaction) => (
-                          <TableRow key={transaction.id}>
-                            <TableCell>{format(transaction.date, "MMM dd, yyyy")}</TableCell>
-                            <TableCell>
-                              <Badge variant={transaction.type === 'expense' ? 'destructive' : 'default'}>
-                                {transaction.type === 'expense' ? 'Expense' : 'Income'}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>{transaction.categoryOrSource}</TableCell>
-                            <TableCell className={`text-right font-medium ${transaction.type === 'expense' ? 'text-red-600' : 'text-green-600'}`}>
-                              {transaction.type === 'expense' ? '-' : '+'}${transaction.amount.toFixed(2)}
-                            </TableCell>
-                            <TableCell>{transaction.description || "-"}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
+                      ))}
+                    </TableBody>
+                  </Table>
                 )}
               </CardContent>
             </Card>
