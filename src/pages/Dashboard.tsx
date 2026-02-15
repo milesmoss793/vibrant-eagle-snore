@@ -38,51 +38,58 @@ const Dashboard: React.FC = () => {
   const { recurringTransactions } = useRecurring();
   const [timePeriod, setTimePeriod] = useState<"month" | "3months" | "6months" | "year" | "all">("month");
 
-  const filterDataByTimePeriod = <T extends { date: Date }>(data: T[], period: string): T[] => {
+  const filteredData = useMemo(() => {
     const now = new Date();
     let startDate: Date | null = null;
     let endDate: Date | null = null;
 
-    if (period === "month") {
+    if (timePeriod === "month") {
       startDate = startOfMonth(now);
       endDate = endOfMonth(now);
-    } else if (period === "3months") {
+    } else if (timePeriod === "3months") {
       startDate = startOfMonth(subMonths(now, 2));
       endDate = endOfMonth(now);
-    } else if (period === "6months") {
+    } else if (timePeriod === "6months") {
       startDate = startOfMonth(subMonths(now, 5));
       endDate = endOfMonth(now);
-    } else if (period === "year") {
+    } else if (timePeriod === "year") {
       startDate = startOfYear(now);
       endDate = endOfYear(now);
-    } else {
-      return data;
     }
 
-    return data.filter((item) => item.date >= startDate! && item.date <= endDate!);
-  };
-
-  const filteredExpenses = filterDataByTimePeriod(expenses, timePeriod);
-  const filteredIncome = filterDataByTimePeriod(income, timePeriod);
-
-  const totalExpenses = filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0);
-  const totalIncome = filteredIncome.reduce((sum, entry) => sum + entry.amount, 0);
-  const netBalance = totalIncome - totalExpenses;
-  const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpenses) / totalIncome) * 100 : 0;
-
-  const comparisonData = useMemo(() => {
-    const now = new Date();
-    const lastMonth = subMonths(now, 1);
-    const thisMonthExpenses = expenses.filter(e => isSameMonth(e.date, now)).reduce((sum, e) => sum + e.amount, 0);
-    const lastMonthExpenses = expenses.filter(e => isSameMonth(e.date, lastMonth)).reduce((sum, e) => sum + e.amount, 0);
-    const thisMonthIncome = income.filter(i => isSameMonth(i.date, now)).reduce((sum, i) => sum + i.amount, 0);
-    const lastMonthIncome = income.filter(i => isSameMonth(i.date, lastMonth)).reduce((sum, i) => sum + i.amount, 0);
+    const filterFn = (item: { date: Date }) => 
+      !startDate || (item.date >= startDate && item.date <= endDate!);
 
     return {
-      expenses: { current: thisMonthExpenses, previous: lastMonthExpenses, diff: thisMonthExpenses - lastMonthExpenses },
-      income: { current: thisMonthIncome, previous: lastMonthIncome, diff: thisMonthIncome - lastMonthIncome }
+      expenses: expenses.filter(filterFn),
+      income: income.filter(filterFn)
     };
-  }, [expenses, income]);
+  }, [expenses, income, timePeriod]);
+
+  const stats = useMemo(() => {
+    const totalExpenses = filteredData.expenses.reduce((sum, e) => sum + e.amount, 0);
+    const totalIncome = filteredData.income.reduce((sum, i) => sum + i.amount, 0);
+    const netBalance = totalIncome - totalExpenses;
+    const savingsRate = totalIncome > 0 ? (netBalance / totalIncome) * 100 : 0;
+
+    const now = new Date();
+    const lastMonth = subMonths(now, 1);
+    const thisMonthExp = expenses.filter(e => isSameMonth(e.date, now)).reduce((sum, e) => sum + e.amount, 0);
+    const lastMonthExp = expenses.filter(e => isSameMonth(e.date, lastMonth)).reduce((sum, e) => sum + e.amount, 0);
+    const thisMonthInc = income.filter(i => isSameMonth(i.date, now)).reduce((sum, i) => sum + i.amount, 0);
+    const lastMonthInc = income.filter(i => isSameMonth(i.date, lastMonth)).reduce((sum, i) => sum + i.amount, 0);
+
+    return {
+      totalExpenses,
+      totalIncome,
+      netBalance,
+      savingsRate,
+      comparison: {
+        expenses: { diff: thisMonthExp - lastMonthExp, percent: lastMonthExp ? ((thisMonthExp - lastMonthExp) / lastMonthExp) * 100 : 0 },
+        income: { diff: thisMonthInc - lastMonthInc, percent: lastMonthInc ? ((thisMonthInc - lastMonthInc) / lastMonthInc) * 100 : 0 }
+      }
+    };
+  }, [filteredData, expenses, income]);
 
   const budgetAlerts = useMemo(() => {
     const now = new Date();
@@ -111,13 +118,11 @@ const Dashboard: React.FC = () => {
 
   const topCategories = useMemo(() => {
     const categories: Record<string, number> = {};
-    filteredExpenses.forEach(e => {
+    filteredData.expenses.forEach(e => {
       categories[e.category] = (categories[e.category] || 0) + e.amount;
     });
     return Object.entries(categories).sort(([, a], [, b]) => b - a).slice(0, 5);
-  }, [filteredExpenses]);
-
-  const upcomingRecurring = useMemo(() => recurringTransactions.filter(t => t.isActive).slice(0, 3), [recurringTransactions]);
+  }, [filteredData.expenses]);
 
   const recentTransactions = useMemo(() => {
     const all = [
@@ -170,10 +175,10 @@ const Dashboard: React.FC = () => {
               <TrendingUp className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">${totalIncome.toFixed(2)}</div>
+              <div className="text-2xl font-bold text-green-600">${stats.totalIncome.toFixed(2)}</div>
               <div className="flex items-center gap-1 mt-1">
-                <Badge variant={comparisonData.income.diff >= 0 ? "default" : "destructive"} className="text-[10px] px-1 py-0">
-                  {comparisonData.income.diff >= 0 ? "+" : ""}{((comparisonData.income.diff / (comparisonData.income.previous || 1)) * 100).toFixed(0)}%
+                <Badge variant={stats.comparison.income.diff >= 0 ? "default" : "destructive"} className="text-[10px] px-1 py-0">
+                  {stats.comparison.income.diff >= 0 ? "+" : ""}{stats.comparison.income.percent.toFixed(0)}%
                 </Badge>
                 <span className="text-[10px] text-muted-foreground">vs last month</span>
               </div>
@@ -185,10 +190,10 @@ const Dashboard: React.FC = () => {
               <TrendingDown className="h-4 w-4 text-red-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">${totalExpenses.toFixed(2)}</div>
+              <div className="text-2xl font-bold text-red-600">${stats.totalExpenses.toFixed(2)}</div>
               <div className="flex items-center gap-1 mt-1">
-                <Badge variant={comparisonData.expenses.diff <= 0 ? "default" : "destructive"} className="text-[10px] px-1 py-0">
-                  {comparisonData.expenses.diff >= 0 ? "+" : ""}{((comparisonData.expenses.diff / (comparisonData.expenses.previous || 1)) * 100).toFixed(0)}%
+                <Badge variant={stats.comparison.expenses.diff <= 0 ? "default" : "destructive"} className="text-[10px] px-1 py-0">
+                  {stats.comparison.expenses.diff >= 0 ? "+" : ""}{stats.comparison.expenses.percent.toFixed(0)}%
                 </Badge>
                 <span className="text-[10px] text-muted-foreground">vs last month</span>
               </div>
@@ -200,8 +205,8 @@ const Dashboard: React.FC = () => {
               <ArrowRightLeft className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className={`text-2xl font-bold ${netBalance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                ${netBalance.toFixed(2)}
+              <div className={`text-2xl font-bold ${stats.netBalance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                ${stats.netBalance.toFixed(2)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">Total savings/loss</p>
             </CardContent>
@@ -212,15 +217,15 @@ const Dashboard: React.FC = () => {
               <PieChart className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent className="space-y-2">
-              <div className="text-2xl font-bold">{savingsRate.toFixed(1)}%</div>
-              <Progress value={Math.max(0, Math.min(100, savingsRate))} className="h-2" />
+              <div className="text-2xl font-bold">{stats.savingsRate.toFixed(1)}%</div>
+              <Progress value={Math.max(0, Math.min(100, stats.savingsRate))} className="h-2" />
             </CardContent>
           </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            <FinancialCharts expenses={filteredExpenses} income={filteredIncome} timePeriod={timePeriod as any} />
+            <FinancialCharts expenses={filteredData.expenses} income={filteredData.income} timePeriod={timePeriod as any} />
             
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
@@ -322,44 +327,10 @@ const Dashboard: React.FC = () => {
                         </div>
                         <span>${amount.toFixed(2)}</span>
                       </div>
-                      <Progress value={(amount / totalExpenses) * 100} className="h-1" />
+                      <Progress value={(amount / stats.totalExpenses) * 100} className="h-1" />
                     </div>
                   ))
                 )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CalendarDays className="h-5 w-5 text-primary" />
-                  Upcoming Recurring
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {upcomingRecurring.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No active schedules.</p>
-                ) : (
-                  upcomingRecurring.map((t) => (
-                    <div key={t.id} className="flex items-center justify-between p-2 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className={`p-1.5 rounded-full ${t.type === 'expense' ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-500'}`}>
-                          {getCategoryIcon(t.categoryOrSource)}
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium capitalize">{t.categoryOrSource}</span>
-                          <span className="text-[10px] text-muted-foreground capitalize">{t.frequency}</span>
-                        </div>
-                      </div>
-                      <div className={`text-sm font-bold ${t.type === 'expense' ? 'text-red-600' : 'text-green-600'}`}>
-                        ${t.amount.toFixed(2)}
-                      </div>
-                    </div>
-                  ))
-                )}
-                <Button variant="ghost" size="sm" className="w-full text-xs" asChild>
-                  <Link to="/recurring">Manage Schedules</Link>
-                </Button>
               </CardContent>
             </Card>
           </div>

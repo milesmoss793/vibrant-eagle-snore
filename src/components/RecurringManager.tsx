@@ -1,17 +1,21 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useRecurring, RecurringTransaction, Frequency } from '@/context/RecurringContext';
 import { useExpenses } from '@/context/ExpenseContext';
 import { useIncome } from '@/context/IncomeContext';
 import { addDays, addWeeks, addMonths, addYears, isBefore, isSameDay, startOfDay } from 'date-fns';
-import { toast } from '@/components/ui/use-toast';
+import { showSuccess } from '@/utils/toast';
 
 const RecurringManager: React.FC = () => {
   const { recurringTransactions, updateRecurringTransaction } = useRecurring();
   const { addExpense } = useExpenses();
   const { addIncome } = useIncome();
+  const processingRef = useRef(false);
 
   useEffect(() => {
+    if (processingRef.current) return;
+    
     const processRecurring = () => {
+      processingRef.current = true;
       const today = startOfDay(new Date());
       let processedCount = 0;
 
@@ -59,11 +63,9 @@ const RecurringManager: React.FC = () => {
       });
 
       if (processedCount > 0) {
-        toast({
-          title: "Recurring Transactions Processed",
-          description: `Automatically added ${processedCount} transaction(s).`,
-        });
+        showSuccess(`Automatically processed ${processedCount} recurring transaction(s).`);
       }
+      processingRef.current = false;
     };
 
     processRecurring();
@@ -79,7 +81,7 @@ const RecurringManager: React.FC = () => {
     }
   };
 
-  return null; // Background component
+  return null;
 };
 
 export default RecurringManager;
