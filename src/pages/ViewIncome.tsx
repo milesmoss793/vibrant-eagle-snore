@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, CalendarIcon } from "lucide-react";
+import { Edit, Trash2, CalendarIcon, Search } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +36,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { getCategoryIcon } from "@/utils/icons";
 
 type SortKey = "date" | "source" | "amount";
 type SortOrder = "asc" | "desc";
@@ -49,6 +51,7 @@ const ViewIncome: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   const [selectedSource, setSelectedSource] = useState<string>("all");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleDelete = (id: string) => {
     deleteIncome(id);
@@ -65,6 +68,15 @@ const ViewIncome: React.FC = () => {
     if (selectedSource !== "all") {
       currentIncome = currentIncome.filter(
         (entry) => entry.source === selectedSource
+      );
+    }
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      currentIncome = currentIncome.filter(
+        (entry) => 
+          entry.description?.toLowerCase().includes(query) || 
+          entry.source.toLowerCase().includes(query)
       );
     }
 
@@ -90,17 +102,29 @@ const ViewIncome: React.FC = () => {
       return sortOrder === "asc" ? compareValue : -compareValue;
     });
     return currentIncome;
-  }, [income, selectedSource, dateRange, sortBy, sortOrder]);
+  }, [income, selectedSource, searchQuery, dateRange, sortBy, sortOrder]);
 
   return (
     <div className="flex justify-center py-8">
-      <Card className="w-full max-w-4xl">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-center">All Income</CardTitle>
+      <Card className="w-full max-w-5xl">
+        <CardHeader className="space-y-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <CardTitle>All Income</CardTitle>
+            <div className="relative w-full md:w-72">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search income..."
+                className="pl-8"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             <Select value={selectedSource} onValueChange={setSelectedSource}>
               <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="Filter by Source" />
+                <SelectValue placeholder="Source" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Sources</SelectItem>
@@ -170,7 +194,7 @@ const ViewIncome: React.FC = () => {
         </CardHeader>
         <CardContent>
           {filteredAndSortedIncome.length === 0 ? (
-            <p className="text-center text-muted-foreground py-4">No income found for the selected filters.</p>
+            <p className="text-center text-muted-foreground py-8">No income found for the selected filters.</p>
           ) : (
             <div className="overflow-x-auto">
               <Table>
@@ -187,9 +211,14 @@ const ViewIncome: React.FC = () => {
                   {filteredAndSortedIncome.map((entry) => (
                     <TableRow key={entry.id}>
                       <TableCell>{format(entry.date, "PPP")}</TableCell>
-                      <TableCell>{entry.source}</TableCell>
-                      <TableCell className="text-right">${entry.amount.toFixed(2)}</TableCell>
-                      <TableCell>{entry.description || "-"}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {getCategoryIcon(entry.source)}
+                          {entry.source}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right font-medium text-green-600">${entry.amount.toFixed(2)}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">{entry.description || "-"}</TableCell>
                       <TableCell className="flex justify-center space-x-2">
                         <Button variant="outline" size="sm" onClick={() => handleEdit(entry)}>
                           <Edit className="h-4 w-4" />

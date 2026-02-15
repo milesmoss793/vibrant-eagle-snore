@@ -12,15 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import FinancialCharts from "@/components/charts/FinancialCharts";
-import { format, startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear, addDays, isSameMonth } from "date-fns";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { format, startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear, isSameMonth } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { 
   AlertCircle, 
@@ -31,34 +23,13 @@ import {
   PlusCircle, 
   Wallet, 
   ArrowRightLeft,
-  Utensils,
-  Car,
-  Zap,
-  ShoppingBag,
-  HeartPulse,
-  GraduationCap,
-  Home as HomeIcon,
-  Coffee,
-  MoreHorizontal
+  Target
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-
-const getCategoryIcon = (category: string) => {
-  const cat = category.toLowerCase();
-  if (cat.includes('food') || cat.includes('restaurant')) return <Utensils className="h-4 w-4" />;
-  if (cat.includes('transport') || cat.includes('car')) return <Car className="h-4 w-4" />;
-  if (cat.includes('utilit')) return <Zap className="h-4 w-4" />;
-  if (cat.includes('shop')) return <ShoppingBag className="h-4 w-4" />;
-  if (cat.includes('health')) return <HeartPulse className="h-4 w-4" />;
-  if (cat.includes('educat')) return <GraduationCap className="h-4 w-4" />;
-  if (cat.includes('rent') || cat.includes('home')) return <HomeIcon className="h-4 w-4" />;
-  if (cat.includes('coffee')) return <Coffee className="h-4 w-4" />;
-  if (cat.includes('salary') || cat.includes('income')) return <Wallet className="h-4 w-4" />;
-  return <MoreHorizontal className="h-4 w-4" />;
-};
+import { getCategoryIcon } from "@/utils/icons";
 
 const Dashboard: React.FC = () => {
   const { expenses } = useExpenses();
@@ -99,14 +70,11 @@ const Dashboard: React.FC = () => {
   const netBalance = totalIncome - totalExpenses;
   const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpenses) / totalIncome) * 100 : 0;
 
-  // Monthly Comparison
   const comparisonData = useMemo(() => {
     const now = new Date();
     const lastMonth = subMonths(now, 1);
-    
     const thisMonthExpenses = expenses.filter(e => isSameMonth(e.date, now)).reduce((sum, e) => sum + e.amount, 0);
     const lastMonthExpenses = expenses.filter(e => isSameMonth(e.date, lastMonth)).reduce((sum, e) => sum + e.amount, 0);
-    
     const thisMonthIncome = income.filter(i => isSameMonth(i.date, now)).reduce((sum, i) => sum + i.amount, 0);
     const lastMonthIncome = income.filter(i => isSameMonth(i.date, lastMonth)).reduce((sum, i) => sum + i.amount, 0);
 
@@ -116,43 +84,41 @@ const Dashboard: React.FC = () => {
     };
   }, [expenses, income]);
 
-  // Budget Alerts (Current Month Only)
   const budgetAlerts = useMemo(() => {
     const now = new Date();
     const monthStart = startOfMonth(now);
     const monthEnd = endOfMonth(now);
-    
     return budgets.map(budget => {
       const spent = expenses
         .filter(e => e.category === budget.category && e.date >= monthStart && e.date <= monthEnd)
         .reduce((sum, e) => sum + e.amount, 0);
-      
-      if (spent > budget.amount) {
-        return { category: budget.category, overBy: spent - budget.amount };
-      }
+      if (spent > budget.amount) return { category: budget.category, overBy: spent - budget.amount };
       return null;
     }).filter(Boolean);
   }, [budgets, expenses]);
 
-  // Top Spending Categories
+  const budgetSummary = useMemo(() => {
+    const now = new Date();
+    const monthStart = startOfMonth(now);
+    const monthEnd = endOfMonth(now);
+    return budgets.map(budget => {
+      const spent = expenses
+        .filter(e => e.category === budget.category && e.date >= monthStart && e.date <= monthEnd)
+        .reduce((sum, e) => sum + e.amount, 0);
+      return { ...budget, spent, percent: (spent / budget.amount) * 100 };
+    }).sort((a, b) => b.percent - a.percent).slice(0, 3);
+  }, [budgets, expenses]);
+
   const topCategories = useMemo(() => {
     const categories: Record<string, number> = {};
     filteredExpenses.forEach(e => {
       categories[e.category] = (categories[e.category] || 0) + e.amount;
     });
-    return Object.entries(categories)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 5);
+    return Object.entries(categories).sort(([, a], [, b]) => b - a).slice(0, 5);
   }, [filteredExpenses]);
 
-  // Upcoming Recurring Transactions
-  const upcomingRecurring = useMemo(() => {
-    return recurringTransactions
-      .filter(t => t.isActive)
-      .slice(0, 3);
-  }, [recurringTransactions]);
+  const upcomingRecurring = useMemo(() => recurringTransactions.filter(t => t.isActive).slice(0, 3), [recurringTransactions]);
 
-  // Recent Transactions
   const recentTransactions = useMemo(() => {
     const all = [
       ...expenses.map(e => ({ ...e, type: 'expense' as const })),
@@ -183,20 +149,18 @@ const Dashboard: React.FC = () => {
             <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
             <p className="text-muted-foreground">Welcome back! Here's your financial summary.</p>
           </div>
-          <div className="flex items-center gap-2">
-            <Select value={timePeriod} onValueChange={(value: any) => setTimePeriod(value)}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select time period" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="month">This Month</SelectItem>
-                <SelectItem value="3months">Last 3 Months</SelectItem>
-                <SelectItem value="6months">Last 6 Months</SelectItem>
-                <SelectItem value="year">This Year</SelectItem>
-                <SelectItem value="all">All Time</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <Select value={timePeriod} onValueChange={(value: any) => setTimePeriod(value)}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select time period" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="month">This Month</SelectItem>
+              <SelectItem value="3months">Last 3 Months</SelectItem>
+              <SelectItem value="6months">Last 6 Months</SelectItem>
+              <SelectItem value="year">This Year</SelectItem>
+              <SelectItem value="all">All Time</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -312,6 +276,31 @@ const Dashboard: React.FC = () => {
                 </Button>
               </CardContent>
             </Card>
+
+            {budgetSummary.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="h-5 w-5 text-primary" />
+                    Budget Progress
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {budgetSummary.map((b) => (
+                    <div key={b.category} className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="font-medium">{b.category}</span>
+                        <span>${b.spent.toFixed(0)} / ${b.amount.toFixed(0)}</span>
+                      </div>
+                      <Progress value={b.percent} className={`h-1.5 ${b.percent > 100 ? 'bg-destructive/20' : ''}`} />
+                    </div>
+                  ))}
+                  <Button variant="ghost" size="sm" className="w-full text-xs" asChild>
+                    <Link to="/budgets">View All Budgets</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
 
             <Card>
               <CardHeader>
