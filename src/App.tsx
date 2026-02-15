@@ -13,8 +13,10 @@ import Dashboard from "./pages/Dashboard";
 import { ExpenseProvider } from "./context/ExpenseContext";
 import { IncomeProvider } from "./context/IncomeContext";
 import { UserPreferencesProvider } from "./context/UserPreferencesContext";
+import { CategoryProvider } from "./context/CategoryContext";
 import AddIncome from "./pages/AddIncome";
 import ViewIncome from "./pages/ViewIncome";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -22,28 +24,30 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <UserPreferencesProvider>
-        <Toaster />
-        <Sonner />
-        <TooltipProvider>
-          <BrowserRouter>
-            <ExpenseProvider>
-              <IncomeProvider>
-                <Routes>
-                  <Route path="/" element={<MainLayout />}>
-                    <Route index element={<Dashboard />} /> {/* Changed to Dashboard */}
-                    <Route path="add-expense" element={<AddExpense />} />
-                    <Route path="view-expenses" element={<ViewExpenses />} />
-                    <Route path="add-income" element={<AddIncome />} />
-                    <Route path="view-income" element={<ViewIncome />} />
-                    <Route path="dashboard" element={<Dashboard />} />
-                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                    <Route path="*" element={<NotFound />} />
-                  </Route>
-                </Routes>
-              </IncomeProvider>
-            </ExpenseProvider>
-          </BrowserRouter>
-        </TooltipProvider>
+        <CategoryProvider>
+          <Toaster />
+          <Sonner />
+          <TooltipProvider>
+            <BrowserRouter>
+              <ExpenseProvider>
+                <IncomeProvider>
+                  <Routes>
+                    <Route path="/" element={<MainLayout />}>
+                      <Route index element={<Dashboard />} />
+                      <Route path="add-expense" element={<AddExpense />} />
+                      <Route path="view-expenses" element={<ViewExpenses />} />
+                      <Route path="add-income" element={<AddIncome />} />
+                      <Route path="view-income" element={<ViewIncome />} />
+                      <Route path="dashboard" element={<Dashboard />} />
+                      <Route path="settings" element={<Settings />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Route>
+                  </Routes>
+                </IncomeProvider>
+              </ExpenseProvider>
+            </BrowserRouter>
+          </TooltipProvider>
+        </CategoryProvider>
       </UserPreferencesProvider>
     </ThemeProvider>
   </QueryClientProvider>

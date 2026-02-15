@@ -29,6 +29,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
 import { useExpenses, Expense } from "@/context/ExpenseContext";
+import { useCategories } from "@/context/CategoryContext";
 
 const expenseFormSchema = z.object({
   amount: z.coerce.number().min(0.01, { message: "Amount must be positive." }),
@@ -39,19 +40,6 @@ const expenseFormSchema = z.object({
 
 type ExpenseFormValues = z.infer<typeof expenseFormSchema>;
 
-const categories = [
-  "Food",
-  "Transport",
-  "Utilities",
-  "Entertainment",
-  "Shopping",
-  "Healthcare",
-  "Education",
-  "Rent",
-  "Salary",
-  "Other",
-];
-
 interface EditExpenseDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -60,6 +48,7 @@ interface EditExpenseDialogProps {
 
 const EditExpenseDialog: React.FC<EditExpenseDialogProps> = ({ isOpen, onClose, expense }) => {
   const { updateExpense } = useExpenses();
+  const { expenseCategories } = useCategories();
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseFormSchema),
     defaultValues: {
@@ -79,7 +68,6 @@ const EditExpenseDialog: React.FC<EditExpenseDialogProps> = ({ isOpen, onClose, 
     onClose();
   };
 
-  // Reset form when dialog opens with a new expense
   React.useEffect(() => {
     if (isOpen) {
       form.reset({
@@ -121,14 +109,14 @@ const EditExpenseDialog: React.FC<EditExpenseDialogProps> = ({ isOpen, onClose, 
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Category</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a category" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {categories.map((category) => (
+                      {expenseCategories.map((category) => (
                         <SelectItem key={category} value={category}>
                           {category}
                         </SelectItem>

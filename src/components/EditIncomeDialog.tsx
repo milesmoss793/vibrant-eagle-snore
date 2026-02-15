@@ -29,6 +29,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
 import { useIncome, Income } from "@/context/IncomeContext";
+import { useCategories } from "@/context/CategoryContext";
 
 const incomeFormSchema = z.object({
   amount: z.coerce.number().min(0.01, { message: "Amount must be positive." }),
@@ -39,15 +40,6 @@ const incomeFormSchema = z.object({
 
 type IncomeFormValues = z.infer<typeof incomeFormSchema>;
 
-const incomeSources = [
-  "Salary",
-  "Freelance",
-  "Investment",
-  "Gift",
-  "Refund",
-  "Other",
-];
-
 interface EditIncomeDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -56,6 +48,7 @@ interface EditIncomeDialogProps {
 
 const EditIncomeDialog: React.FC<EditIncomeDialogProps> = ({ isOpen, onClose, incomeEntry }) => {
   const { updateIncome } = useIncome();
+  const { incomeSources } = useCategories();
   const form = useForm<IncomeFormValues>({
     resolver: zodResolver(incomeFormSchema),
     defaultValues: {
@@ -75,7 +68,6 @@ const EditIncomeDialog: React.FC<EditIncomeDialogProps> = ({ isOpen, onClose, in
     onClose();
   };
 
-  // Reset form when dialog opens with a new income entry
   React.useEffect(() => {
     if (isOpen) {
       form.reset({
@@ -117,7 +109,7 @@ const EditIncomeDialog: React.FC<EditIncomeDialogProps> = ({ isOpen, onClose, in
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Source</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select an income source" />

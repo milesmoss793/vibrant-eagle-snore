@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useIncome, Income } from "@/context/IncomeContext";
+import { useCategories } from "@/context/CategoryContext";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -39,17 +40,9 @@ import { cn } from "@/lib/utils";
 type SortKey = "date" | "source" | "amount";
 type SortOrder = "asc" | "desc";
 
-const incomeSources = [
-  "Salary",
-  "Freelance",
-  "Investment",
-  "Gift",
-  "Refund",
-  "Other",
-];
-
 const ViewIncome: React.FC = () => {
   const { income, deleteIncome } = useIncome();
+  const { incomeSources } = useCategories();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedIncomeEntry, setSelectedIncomeEntry] = useState<Income | null>(null);
   const [sortBy, setSortBy] = useState<SortKey>("date");
@@ -69,14 +62,12 @@ const ViewIncome: React.FC = () => {
   const filteredAndSortedIncome = useMemo(() => {
     let currentIncome = [...income];
 
-    // Apply source filter
     if (selectedSource !== "all") {
       currentIncome = currentIncome.filter(
         (entry) => entry.source === selectedSource
       );
     }
 
-    // Apply date range filter
     if (dateRange?.from) {
       currentIncome = currentIncome.filter((entry) => {
         const incomeDate = new Date(entry.date.getFullYear(), entry.date.getMonth(), entry.date.getDate());
@@ -87,7 +78,6 @@ const ViewIncome: React.FC = () => {
       });
     }
 
-    // Apply sorting
     currentIncome.sort((a, b) => {
       let compareValue = 0;
       if (sortBy === "date") {

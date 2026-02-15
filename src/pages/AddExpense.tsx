@@ -28,7 +28,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
-import { useExpenses } from "@/context/ExpenseContext"; // Added import
+import { useExpenses } from "@/context/ExpenseContext";
+import { useCategories } from "@/context/CategoryContext";
 
 const expenseFormSchema = z.object({
   amount: z.coerce.number().min(0.01, { message: "Amount must be positive." }),
@@ -39,39 +40,27 @@ const expenseFormSchema = z.object({
 
 type ExpenseFormValues = z.infer<typeof expenseFormSchema>;
 
-const categories = [
-  "Food",
-  "Transport",
-  "Utilities",
-  "Entertainment",
-  "Shopping",
-  "Healthcare",
-  "Education",
-  "Rent",
-  "Salary",
-  "Other",
-];
-
 const AddExpense: React.FC = () => {
-  const { addExpense } = useExpenses(); // Added useExpenses hook
+  const { addExpense } = useExpenses();
+  const { expenseCategories } = useCategories();
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseFormSchema),
     defaultValues: {
-      amount: undefined, // Changed from 0 to undefined
+      amount: undefined,
       category: "",
       description: "",
-      date: undefined, // Changed from undefined to undefined for consistency
+      date: undefined,
     },
   });
 
   const onSubmit = (values: ExpenseFormValues) => {
-    addExpense(values); // Now correctly adding the expense
+    addExpense(values);
     toast({
       title: "Expense Added!",
       description: `Amount: $${values.amount.toFixed(2)}, Category: ${values.category}, Date: ${format(values.date, "PPP")}`,
     });
     form.reset({
-      amount: undefined, // Changed from 0 to undefined
+      amount: undefined,
       category: "",
       description: "",
       date: undefined,
@@ -106,14 +95,14 @@ const AddExpense: React.FC = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {categories.map((category) => (
+                        {expenseCategories.map((category) => (
                           <SelectItem key={category} value={category}>
                             {category}
                           </SelectItem>

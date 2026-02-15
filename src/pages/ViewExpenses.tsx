@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useExpenses, Expense } from "@/context/ExpenseContext";
+import { useCategories } from "@/context/CategoryContext";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -39,21 +40,9 @@ import { cn } from "@/lib/utils";
 type SortKey = "date" | "category" | "amount";
 type SortOrder = "asc" | "desc";
 
-const categories = [
-  "Food",
-  "Transport",
-  "Utilities",
-  "Entertainment",
-  "Shopping",
-  "Healthcare",
-  "Education",
-  "Rent",
-  "Salary",
-  "Other",
-];
-
 const ViewExpenses: React.FC = () => {
   const { expenses, deleteExpense } = useExpenses();
+  const { expenseCategories } = useCategories();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [sortBy, setSortBy] = useState<SortKey>("date");
@@ -73,14 +62,12 @@ const ViewExpenses: React.FC = () => {
   const filteredAndSortedExpenses = useMemo(() => {
     let currentExpenses = [...expenses];
 
-    // Apply category filter
     if (selectedCategory !== "all") {
       currentExpenses = currentExpenses.filter(
         (expense) => expense.category === selectedCategory
       );
     }
 
-    // Apply date range filter
     if (dateRange?.from) {
       currentExpenses = currentExpenses.filter((expense) => {
         const expenseDate = new Date(expense.date.getFullYear(), expense.date.getMonth(), expense.date.getDate());
@@ -91,7 +78,6 @@ const ViewExpenses: React.FC = () => {
       });
     }
 
-    // Apply sorting
     currentExpenses.sort((a, b) => {
       let compareValue = 0;
       if (sortBy === "date") {
@@ -118,7 +104,7 @@ const ViewExpenses: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((category) => (
+                {expenseCategories.map((category) => (
                   <SelectItem key={category} value={category}>
                     {category}
                   </SelectItem>

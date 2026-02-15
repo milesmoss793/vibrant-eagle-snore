@@ -29,6 +29,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
 import { useIncome } from "@/context/IncomeContext";
+import { useCategories } from "@/context/CategoryContext";
 
 const incomeFormSchema = z.object({
   amount: z.coerce.number().min(0.01, { message: "Amount must be positive." }),
@@ -39,24 +40,16 @@ const incomeFormSchema = z.object({
 
 type IncomeFormValues = z.infer<typeof incomeFormSchema>;
 
-const incomeSources = [
-  "Salary",
-  "Freelance",
-  "Investment",
-  "Gift",
-  "Refund",
-  "Other",
-];
-
 const AddIncome: React.FC = () => {
   const { addIncome } = useIncome();
+  const { incomeSources } = useCategories();
   const form = useForm<IncomeFormValues>({
     resolver: zodResolver(incomeFormSchema),
     defaultValues: {
-      amount: undefined, // Changed from 0 to undefined
+      amount: undefined,
       source: "",
       description: "",
-      date: undefined, // Changed from undefined to undefined for consistency
+      date: undefined,
     },
   });
 
@@ -67,7 +60,7 @@ const AddIncome: React.FC = () => {
       description: `Amount: $${values.amount.toFixed(2)}, Source: ${values.source}, Date: ${format(values.date, "PPP")}`,
     });
     form.reset({
-      amount: undefined, // Changed from 0 to undefined
+      amount: undefined,
       source: "",
       description: "",
       date: undefined,
@@ -102,7 +95,7 @@ const AddIncome: React.FC = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Source</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select an income source" />
