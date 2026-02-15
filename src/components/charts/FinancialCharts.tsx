@@ -24,7 +24,8 @@ import {
   eachMonthOfInterval, 
   eachDayOfInterval,
   isSameDay,
-  isSameMonth
+  isSameMonth,
+  isBefore
 } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -59,7 +60,7 @@ const FinancialCharts: React.FC<FinancialChartsProps> = ({ expenses, income, tim
     return acc;
   }, [] as { name: string; value: number }[]);
 
-  // Determine granularity: Daily for "month", Monthly for others
+  // Determine granularity and date range
   const isDaily = timePeriod === "month";
   const now = new Date();
   let startDateForInterval = startOfMonth(now);
@@ -79,6 +80,16 @@ const FinancialCharts: React.FC<FinancialChartsProps> = ({ expenses, income, tim
     }
   }
 
+  // Calculate starting balance (carry-over from before the start date)
+  const initialIncome = income
+    .filter(i => isBefore(i.date, startDateForInterval))
+    .reduce((sum, i) => sum + i.amount, 0);
+  const initialExpenses = expenses
+    .filter(e => isBefore(e.date, startDateForInterval))
+    .reduce((sum, e) => sum + e.amount, 0);
+  
+  let runningBalance = initialIncome - initialExpenses;
+
   const intervals = isDaily 
     ? eachDayOfInterval({ start: startDateForInterval, end: endDateForInterval })
     : eachMonthOfInterval({ start: startDateForInterval, end: endDateForInterval });
@@ -94,11 +105,13 @@ const FinancialCharts: React.FC<FinancialChartsProps> = ({ expenses, income, tim
       isDaily ? isSameDay(i.date, date) : isSameMonth(i.date, date)
     ).reduce((sum, i) => sum + i.amount, 0);
 
+    runningBalance += (periodIncome - periodExpenses);
+
     return {
       name: label,
       expenses: periodExpenses,
       income: periodIncome,
-      netBalance: periodIncome - periodExpenses
+      netBalance: runningBalance
     };
   });
 
@@ -191,7 +204,7 @@ const FinancialCharts: React.FC<FinancialChartsProps> = ({ expenses, income, tim
               <Legend />
               <Line type="monotone" dataKey="expenses" stroke="#FF8042" name="Expenses" activeDot={{ r: 8 }} />
               <Line type="monotone" dataKey="income" stroke="#00C49F" name="Income" activeDot={{ r: 8 }} />
-              <Line type="monotone" dataKey="netBalance" stroke="#0088FE" name="Net Balance" activeDot={{ r: 8 }} />
+              <Line type="stepAfter" dataKey="netBalance" stroke="#0088FE" name="Net Balance (Cumulative)" strokeWidth={3} activeDot={{ r: 8 }} />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>
