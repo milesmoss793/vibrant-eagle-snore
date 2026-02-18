@@ -13,16 +13,11 @@ import {
 } from "@/components/ui/select";
 import FinancialCharts from "@/components/charts/FinancialCharts";
 import { format, startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear, isSameMonth } from "date-fns";
-import { Badge } from "@/components/ui/badge";
 import { 
   AlertCircle, 
   TrendingDown, 
-  TrendingUp, 
-  CalendarDays, 
-  PieChart, 
   PlusCircle, 
   Wallet, 
-  ArrowRightLeft,
   Target
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -30,6 +25,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { getCategoryIcon } from "@/utils/icons";
+import MetricGrid from "@/components/dashboard/MetricGrid";
 
 const Dashboard: React.FC = () => {
   const { expenses } = useExpenses();
@@ -168,60 +164,7 @@ const Dashboard: React.FC = () => {
           </Select>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Income</CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">${stats.totalIncome.toFixed(2)}</div>
-              <div className="flex items-center gap-1 mt-1">
-                <Badge variant={stats.comparison.income.diff >= 0 ? "default" : "destructive"} className="text-[10px] px-1 py-0">
-                  {stats.comparison.income.diff >= 0 ? "+" : ""}{stats.comparison.income.percent.toFixed(0)}%
-                </Badge>
-                <span className="text-[10px] text-muted-foreground">vs last month</span>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
-              <TrendingDown className="h-4 w-4 text-red-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">${stats.totalExpenses.toFixed(2)}</div>
-              <div className="flex items-center gap-1 mt-1">
-                <Badge variant={stats.comparison.expenses.diff <= 0 ? "default" : "destructive"} className="text-[10px] px-1 py-0">
-                  {stats.comparison.expenses.diff >= 0 ? "+" : ""}{stats.comparison.expenses.percent.toFixed(0)}%
-                </Badge>
-                <span className="text-[10px] text-muted-foreground">vs last month</span>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Net Balance</CardTitle>
-              <ArrowRightLeft className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className={`text-2xl font-bold ${stats.netBalance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                ${stats.netBalance.toFixed(2)}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">Total savings/loss</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Savings Rate</CardTitle>
-              <PieChart className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="text-2xl font-bold">{stats.savingsRate.toFixed(1)}%</div>
-              <Progress value={Math.max(0, Math.min(100, stats.savingsRate))} className="h-2" />
-            </CardContent>
-          </Card>
-        </div>
+        <MetricGrid stats={stats} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
