@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useSecurity } from './SecurityContext';
-import { encryptData, decryptData, isJson } from '@/utils/encryption';
 
+// Define the shape of an expense
 export interface Expense {
   id: string;
   amount: number;
@@ -10,69 +9,61 @@ export interface Expense {
   description?: string;
 }
 
+// Define the shape of the context value
 interface ExpenseContextType {
   expenses: Expense[];
   addExpense: (expense: Omit<Expense, 'id'>) => void;
-  updateExpense: (updatedExpense: Expense) => void;
-  deleteExpense: (id: string) => void;
+  updateExpense: (updatedExpense: Expense) => void; // New: Function to update an expense
+  deleteExpense: (id: string) => void; // New: Function to delete an expense
 }
 
+// Create the context
 const ExpenseContext = createContext<ExpenseContextType | undefined>(undefined);
+
+// Key for localStorage
 const LOCAL_STORAGE_KEY = 'expenseTrackerExpenses';
 
+// Create the provider component
 export const ExpenseProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { encryptionKey } = useSecurity();
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-
-  // Load and decrypt
-  useEffect(() => {
-    if (!encryptionKey) return;
-    
+  const [expenses, setExpenses] = useState<Expense[]>(() => {
+    // Load expenses from localStorage on initial render
     try {
-      const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (stored) {
-        let rawData = stored;
-        // Migration: if it's plain JSON, it's old data
-        if (!isJson(stored)) {
-          const decrypted = decryptData(stored, encryptionKey);
-          if (decrypted) rawData = decrypted;
-        }
-
-        const parsed = JSON.parse(rawData).map((expense: any) => ({
+      const storedExpenses = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (storedExpenses) {
+        // Parse dates back into Date objects
+        return JSON.parse(storedExpenses).map((expense: Expense) => ({
           ...expense,
           date: new Date(expense.date),
         }));
-        setExpenses(parsed);
       }
     } catch (error) {
-      console.error("Failed to load expenses:", error);
+      console.error("Failed to load expenses from localStorage:", error);
     }
-  }, [encryptionKey]);
+    return [];
+  });
 
-  // Encrypt and save
+  // Save expenses to localStorage whenever they change
   useEffect(() => {
-    if (!encryptionKey || expenses.length === 0 && !localStorage.getItem(LOCAL_STORAGE_KEY)) return;
     try {
-      const encrypted = encryptData(JSON.stringify(expenses), encryptionKey);
-      localStorage.setItem(LOCAL_STORAGE_KEY, encrypted);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(expenses));
     } catch (error) {
-      console.error("Failed to save expenses:", error);
+      console.error("Failed to save expenses to localStorage:", error);
     }
-  }, [expenses, encryptionKey]);
+  }, [expenses]);
 
   const addExpense = (newExpense: Omit<Expense, 'id'>) => {
-    const expenseWithId = { ...newExpense, id: Date.now().toString() };
-    setExpenses((prev) => [...prev, expenseWithId]);
+    const expenseWithId = { ...newExpense, id: Date.now().toString() }; // Simple ID generation
+    setExpenses((prevExpenses) => [...prevExpenses, expenseWithId]);
   };
 
   const updateExpense = (updatedExpense: Expense) => {
-    setExpenses((prev) =>
-      prev.map((exp) => (exp.id === updatedExpense.id ? updatedExpense : exp))
+    setExpenses((prevExpenses) =>
+      prevExpenses.map((exp) => (exp.id === updatedExpense.id ? updatedExpense : exp))
     );
   };
 
   const deleteExpense = (id: string) => {
-    setExpenses((prev) => prev.filter((exp) => exp.id !== id));
+    setExpenses((prevExpenses) => prevExpenses.filter((exp) => exp.id !== id));
   };
 
   return (
@@ -82,6 +73,7 @@ export const ExpenseProvider: React.FC<{ children: ReactNode }> = ({ children })
   );
 };
 
+// Custom hook to use the expense context
 export const useExpenses = () => {
   const context = useContext(ExpenseContext);
   if (context === undefined) {

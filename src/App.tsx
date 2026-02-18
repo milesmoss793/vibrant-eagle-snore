@@ -16,7 +16,6 @@ import { CategoryProvider } from "./context/CategoryContext";
 import { RecurringProvider } from "./context/RecurringContext";
 import { BudgetProvider } from "./context/BudgetContext";
 import { GoalProvider } from "./context/GoalContext";
-import { SecurityProvider } from "./context/SecurityContext";
 import AddIncome from "./pages/AddIncome";
 import ViewIncome from "./pages/ViewIncome";
 import Settings from "./pages/Settings";
@@ -30,43 +29,41 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <SecurityProvider>
-        <UserPreferencesProvider>
-          <CategoryProvider>
-            <RecurringProvider>
-              <BudgetProvider>
-                <GoalProvider>
-                  <Toaster />
-                  <Sonner position="top-center" />
-                  <TooltipProvider>
-                    <BrowserRouter>
-                      <ExpenseProvider>
-                        <IncomeProvider>
-                          <RecurringManager />
-                          <Routes>
-                            <Route path="/" element={<MainLayout />}>
-                              <Route index element={<Dashboard />} />
-                              <Route path="add-expense" element={<AddExpense />} />
-                              <Route path="view-expenses" element={<ViewExpenses />} />
-                              <Route path="add-income" element={<AddIncome />} />
-                              <Route path="view-income" element={<ViewIncome />} />
-                              <Route path="settings" element={<Settings />} />
-                              <Route path="recurring" element={<RecurringTransactions />} />
-                              <Route path="budgets" element={<Budgets />} />
-                              <Route path="goals" element={<Goals />} />
-                              <Route path="*" element={<NotFound />} />
-                            </Route>
-                          </Routes>
-                        </IncomeProvider>
-                      </ExpenseProvider>
-                    </BrowserRouter>
-                  </TooltipProvider>
-                </GoalProvider>
-              </BudgetProvider>
-            </RecurringProvider>
-          </CategoryProvider>
-        </UserPreferencesProvider>
-      </SecurityProvider>
+      <UserPreferencesProvider>
+        <CategoryProvider>
+          <RecurringProvider>
+            <BudgetProvider>
+              <GoalProvider>
+                <Toaster />
+                <Sonner position="top-center" />
+                <TooltipProvider>
+                  <BrowserRouter>
+                    <ExpenseProvider>
+                      <IncomeProvider>
+                        <RecurringManager />
+                        <Routes>
+                          <Route path="/" element={<MainLayout />}>
+                            <Route index element={<Dashboard />} />
+                            <Route path="add-expense" element={<AddExpense />} />
+                            <Route path="view-expenses" element={<ViewExpenses />} />
+                            <Route path="add-income" element={<AddIncome />} />
+                            <Route path="view-income" element={<ViewIncome />} />
+                            <Route path="settings" element={<Settings />} />
+                            <Route path="recurring" element={<RecurringTransactions />} />
+                            <Route path="budgets" element={<Budgets />} />
+                            <Route path="goals" element={<Goals />} />
+                            <Route path="*" element={<NotFound />} />
+                          </Route>
+                        </Routes>
+                      </IncomeProvider>
+                    </ExpenseProvider>
+                  </BrowserRouter>
+                </TooltipProvider>
+              </GoalProvider>
+            </BudgetProvider>
+          </RecurringProvider>
+        </CategoryProvider>
+      </UserPreferencesProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );

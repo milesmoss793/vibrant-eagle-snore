@@ -1,6 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useSecurity } from './SecurityContext';
-import { encryptData, decryptData, isJson } from '@/utils/encryption';
 
 interface CategoryContextType {
   expenseCategories: string[];
@@ -26,39 +24,23 @@ const defaultIncomeSources = [
 ];
 
 export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { encryptionKey } = useSecurity();
-  const [expenseCategories, setExpenseCategories] = useState<string[]>(defaultExpenseCategories);
-  const [incomeSources, setIncomeSources] = useState<string[]>(defaultIncomeSources);
+  const [expenseCategories, setExpenseCategories] = useState<string[]>(() => {
+    const stored = localStorage.getItem(LOCAL_STORAGE_EXPENSE_CATEGORIES);
+    return stored ? JSON.parse(stored) : defaultExpenseCategories;
+  });
+
+  const [incomeSources, setIncomeSources] = useState<string[]>(() => {
+    const stored = localStorage.getItem(LOCAL_STORAGE_INCOME_SOURCES);
+    return stored ? JSON.parse(stored) : defaultIncomeSources;
+  });
 
   useEffect(() => {
-    if (!encryptionKey) return;
-    
-    const loadData = (key: string, defaultVal: string[]) => {
-      const stored = localStorage.getItem(key);
-      if (stored) {
-        let rawData = stored;
-        if (!isJson(stored)) {
-          const decrypted = decryptData(stored, encryptionKey);
-          if (decrypted) rawData = decrypted;
-        }
-        return JSON.parse(rawData);
-      }
-      return defaultVal;
-    };
-
-    setExpenseCategories(loadData(LOCAL_STORAGE_EXPENSE_CATEGORIES, defaultExpenseCategories));
-    setIncomeSources(loadData(LOCAL_STORAGE_INCOME_SOURCES, defaultIncomeSources));
-  }, [encryptionKey]);
+    localStorage.setItem(LOCAL_STORAGE_EXPENSE_CATEGORIES, JSON.stringify(expenseCategories));
+  }, [expenseCategories]);
 
   useEffect(() => {
-    if (!encryptionKey) return;
-    localStorage.setItem(LOCAL_STORAGE_EXPENSE_CATEGORIES, encryptData(JSON.stringify(expenseCategories), encryptionKey));
-  }, [expenseCategories, encryptionKey]);
-
-  useEffect(() => {
-    if (!encryptionKey) return;
-    localStorage.setItem(LOCAL_STORAGE_INCOME_SOURCES, encryptData(JSON.stringify(incomeSources), encryptionKey));
-  }, [incomeSources, encryptionKey]);
+    localStorage.setItem(LOCAL_STORAGE_INCOME_SOURCES, JSON.stringify(incomeSources));
+  }, [incomeSources]);
 
   const addExpenseCategory = (category: string) => {
     if (!expenseCategories.includes(category)) {

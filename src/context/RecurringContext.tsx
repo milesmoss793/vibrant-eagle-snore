@@ -1,6 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useSecurity } from './SecurityContext';
-import { encryptData, decryptData, isJson } from '@/utils/encryption';
 
 export type Frequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
@@ -25,44 +23,30 @@ interface RecurringContextType {
 }
 
 const RecurringContext = createContext<RecurringContextType | undefined>(undefined);
+
 const LOCAL_STORAGE_KEY = 'expenseTracker_recurringTransactions';
 
 export const RecurringProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { encryptionKey } = useSecurity();
-  const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>([]);
-
-  useEffect(() => {
-    if (!encryptionKey) return;
+  const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>(() => {
     try {
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (stored) {
-        let rawData = stored;
-        if (!isJson(stored)) {
-          const decrypted = decryptData(stored, encryptionKey);
-          if (decrypted) rawData = decrypted;
-        }
-        const parsed = JSON.parse(rawData).map((t: any) => ({
+        return JSON.parse(stored).map((t: any) => ({
           ...t,
           startDate: new Date(t.startDate),
           endDate: t.endDate ? new Date(t.endDate) : undefined,
           lastProcessedDate: t.lastProcessedDate ? new Date(t.lastProcessedDate) : undefined,
         }));
-        setRecurringTransactions(parsed);
       }
     } catch (error) {
       console.error("Failed to load recurring transactions:", error);
     }
-  }, [encryptionKey]);
+    return [];
+  });
 
   useEffect(() => {
-    if (!encryptionKey || recurringTransactions.length === 0 && !localStorage.getItem(LOCAL_STORAGE_KEY)) return;
-    try {
-      const encrypted = encryptData(JSON.stringify(recurringTransactions), encryptionKey);
-      localStorage.setItem(LOCAL_STORAGE_KEY, encrypted);
-    } catch (error) {
-      console.error("Failed to save recurring transactions:", error);
-    }
-  }, [recurringTransactions, encryptionKey]);
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(recurringTransactions));
+  }, [recurringTransactions]);
 
   const addRecurringTransaction = (newTransaction: Omit<RecurringTransaction, 'id' | 'isActive'>) => {
     const transactionWithId: RecurringTransaction = {

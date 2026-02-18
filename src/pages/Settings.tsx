@@ -1,13 +1,10 @@
 import React, { useState } from "react";
 import { useCategories } from "@/context/CategoryContext";
-import { useSecurity } from "@/context/SecurityContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { X, Plus, Download, Upload, Database, Lock, ShieldCheck, Smartphone } from "lucide-react";
+import { X, Plus, Download, Upload, Database } from "lucide-react";
 import { toast } from "sonner";
 
 const Settings: React.FC = () => {
@@ -19,16 +16,9 @@ const Settings: React.FC = () => {
     addIncomeSource, 
     removeIncomeSource 
   } = useCategories();
-  
-  const { updateKey, lock, isPersistent, setPersist } = useSecurity();
 
   const [newExpenseCat, setNewExpenseCat] = useState("");
   const [newIncomeSrc, setNewIncomeSrc] = useState("");
-  
-  // Security states
-  const [currentPin, setCurrentPin] = useState("");
-  const [newPin, setNewPin] = useState("");
-  const [confirmPin, setConfirmPin] = useState("");
 
   const handleAddExpenseCat = () => {
     if (newExpenseCat.trim()) {
@@ -43,28 +33,6 @@ const Settings: React.FC = () => {
       addIncomeSource(newIncomeSrc.trim());
       setNewIncomeSrc("");
       toast.success(`Added "${newIncomeSrc}" to income.`);
-    }
-  };
-
-  const handleChangePin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newPin !== confirmPin) {
-      toast.error("New passwords do not match.");
-      return;
-    }
-    if (newPin.length < 4) {
-      toast.error("Password must be at least 4 characters.");
-      return;
-    }
-
-    const success = updateKey(currentPin, newPin);
-    if (success) {
-      toast.success("Master password updated successfully!");
-      setCurrentPin("");
-      setNewPin("");
-      setConfirmPin("");
-    } else {
-      toast.error("Incorrect current password.");
     }
   };
 
@@ -124,85 +92,6 @@ const Settings: React.FC = () => {
         <h1 className="text-3xl font-bold">Settings</h1>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Security Section */}
-          <Card className="md:col-span-2 border-primary/20 bg-primary/5">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ShieldCheck className="h-5 w-5 text-primary" />
-                Security & Privacy
-              </CardTitle>
-              <CardDescription>Manage your master password and vault access.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <form onSubmit={handleChangePin} className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
-                <div className="space-y-2">
-                  <Label htmlFor="currentPin">Current Password</Label>
-                  <Input 
-                    id="currentPin" 
-                    type="password" 
-                    value={currentPin} 
-                    onChange={(e) => setCurrentPin(e.target.value)} 
-                    required 
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="newPin">New Password</Label>
-                  <Input 
-                    id="newPin" 
-                    type="password" 
-                    value={newPin} 
-                    onChange={(e) => setNewPin(e.target.value)} 
-                    required 
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPin">Confirm New Password</Label>
-                  <div className="flex gap-2">
-                    <Input 
-                      id="confirmPin" 
-                      type="password" 
-                      value={confirmPin} 
-                      onChange={(e) => setConfirmPin(e.target.value)} 
-                      required 
-                    />
-                    <Button type="submit">Update</Button>
-                  </div>
-                </div>
-              </form>
-
-              <div className="pt-6 border-t space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <Smartphone className="h-4 w-4 text-muted-foreground" />
-                      <Label className="text-base">Stay unlocked on this device</Label>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Keep the vault unlocked even after closing the browser. Only use this on personal, trusted devices.
-                    </p>
-                  </div>
-                  <Switch 
-                    checked={isPersistent} 
-                    onCheckedChange={(checked) => {
-                      setPersist(checked);
-                      toast.success(checked ? "Device trusted. Vault will stay unlocked." : "Device untrusted. Vault will lock on close.");
-                    }} 
-                  />
-                </div>
-
-                <div className="flex justify-between items-center pt-2">
-                  <div className="text-sm text-muted-foreground">
-                    Lock your vault manually when leaving your computer.
-                  </div>
-                  <Button variant="outline" onClick={lock}>
-                    <Lock className="mr-2 h-4 w-4" />
-                    Lock Vault Now
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Expense Categories */}
           <Card>
             <CardHeader>

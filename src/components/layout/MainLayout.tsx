@@ -2,15 +2,13 @@ import React, { useState } from "react";
 import { Link, Outlet } from "react-router-dom";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Button } from "@/components/ui/button";
-import { Menu, Settings, Repeat, PieChart, Home, Target, Lock } from "lucide-react";
+import { Menu, Settings, Repeat, PieChart, Home, Target } from "lucide-react";
 import Sidebar from "./Sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { UserNameInput } from "@/components/UserNameInput";
-import { useSecurity } from "@/context/SecurityContext";
 
 const MainLayout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { lock } = useSecurity();
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
@@ -93,10 +91,6 @@ const MainLayout: React.FC = () => {
             <div className="hidden lg:block">
               <UserNameInput />
             </div>
-            <Button variant="ghost" size="icon" onClick={lock} className="h-8 w-8 text-primary-foreground/80 hover:text-primary-foreground">
-              <Lock className="h-4 w-4" />
-              <span className="sr-only">Lock Vault</span>
-            </Button>
             <ThemeToggle />
           </div>
         </div>
