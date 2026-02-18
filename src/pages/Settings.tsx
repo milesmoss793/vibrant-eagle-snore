@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { X, Plus, Download, Upload, Database, Lock, ShieldCheck } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { X, Plus, Download, Upload, Database, Lock, ShieldCheck, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 
 const Settings: React.FC = () => {
@@ -19,7 +20,7 @@ const Settings: React.FC = () => {
     removeIncomeSource 
   } = useCategories();
   
-  const { updateKey, lock } = useSecurity();
+  const { updateKey, lock, isPersistent, setPersist } = useSecurity();
 
   const [newExpenseCat, setNewExpenseCat] = useState("");
   const [newIncomeSrc, setNewIncomeSrc] = useState("");
@@ -168,14 +169,36 @@ const Settings: React.FC = () => {
                   </div>
                 </div>
               </form>
-              <div className="pt-4 border-t flex justify-between items-center">
-                <div className="text-sm text-muted-foreground">
-                  Lock your vault manually when leaving your computer.
+
+              <div className="pt-6 border-t space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <Smartphone className="h-4 w-4 text-muted-foreground" />
+                      <Label className="text-base">Stay unlocked on this device</Label>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Keep the vault unlocked even after closing the browser. Only use this on personal, trusted devices.
+                    </p>
+                  </div>
+                  <Switch 
+                    checked={isPersistent} 
+                    onCheckedChange={(checked) => {
+                      setPersist(checked);
+                      toast.success(checked ? "Device trusted. Vault will stay unlocked." : "Device untrusted. Vault will lock on close.");
+                    }} 
+                  />
                 </div>
-                <Button variant="outline" onClick={lock}>
-                  <Lock className="mr-2 h-4 w-4" />
-                  Lock Vault Now
-                </Button>
+
+                <div className="flex justify-between items-center pt-2">
+                  <div className="text-sm text-muted-foreground">
+                    Lock your vault manually when leaving your computer.
+                  </div>
+                  <Button variant="outline" onClick={lock}>
+                    <Lock className="mr-2 h-4 w-4" />
+                    Lock Vault Now
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

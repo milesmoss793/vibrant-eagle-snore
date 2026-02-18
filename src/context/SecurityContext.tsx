@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -20,15 +20,20 @@ import {
 interface SecurityContextType {
   encryptionKey: string | null;
   isLocked: boolean;
+  isPersistent: boolean;
   setKey: (key: string) => void;
   updateKey: (oldKey: string, newKey: string) => boolean;
   lock: () => void;
   resetVault: () => void;
+  setPersist: (persist: boolean) => void;
 }
 
 const SecurityContext = createContext<SecurityContextType | undefined>(undefined);
 
 const SESSION_KEY = 'expense_tracker_session_key';
+const LOCAL_KEY = 'expense_tracker_local_key';
+const PERSIST_SETTING_KEY = 'expense_tracker_persist_setting';
+
 const STORAGE_KEYS = [
   'expenseTrackerExpenses',
   'expenseTrackerIncome',
@@ -41,24 +46,50 @@ const STORAGE_KEYS = [
 ];
 
 export const SecurityProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [isPersistent, setIsPersistent] = useState<boolean>(() => {
+    return localStorage.getItem(PERSIST_SETTING_KEY) === 'true';
+  });
+
   const [encryptionKey, setEncryptionKey] = useState<string | null>(() => {
-    return sessionStorage.getItem(SESSION_KEY);
+    const session = sessionStorage.getItem(SESSION_KEY);
+    if (session) return session;
+    
+    const persist = localStorage.getItem(PERSIST_SETTING_KEY) === 'true';
+    if (persist) {
+      return localStorage.getItem(LOCAL_KEY);
+    }
+    return null;
   });
 
   const setKey = (key: string) => {
     setEncryptionKey(key);
     sessionStorage.setItem(SESSION_KEY, key);
+    if (isPersistent) {
+      localStorage.setItem(LOCAL_KEY, key);
+    }
   };
 
   const lock = () => {
     setEncryptionKey(null);
     sessionStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(LOCAL_KEY);
   };
 
   const resetVault = () => {
     STORAGE_KEYS.forEach(key => localStorage.removeItem(key));
+    localStorage.removeItem(PERSIST_SETTING_KEY);
     lock();
     window.location.reload();
+  };
+
+  const setPersist = (persist: boolean) => {
+    setIsPersistent(persist);
+    localStorage.setItem(PERSIST_SETTING_KEY, persist.toString());
+    if (persist && encryptionKey) {
+      localStorage.setItem(LOCAL_KEY, encryptionKey);
+    } else {
+      localStorage.removeItem(LOCAL_KEY);
+    }
   };
 
   const updateKey = (oldKey: string, newKey: string): boolean => {
@@ -153,7 +184,16 @@ export const SecurityProvider: React.FC<{ children: ReactNode }> = ({ children }
   }
 
   return (
-    <SecurityContext.Provider value={{ encryptionKey, isLocked: !encryptionKey, setKey, updateKey, lock, resetVault }}>
+    <SecurityContext.Provider value={{ 
+      encryptionKey, 
+      isLocked: !encryptionKey, 
+      isPersistent,
+      setKey, 
+      updateKey, 
+      lock, 
+      resetVault,
+      setPersist
+    }}>
       {children}
     </SecurityContext.Provider>
   );
