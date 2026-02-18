@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus, Download, Upload, Database } from "lucide-react";
+import { X, Plus, Download, Upload, Database, User } from "lucide-react";
 import { toast } from "sonner";
+import { UserNameInput } from "@/components/UserNameInput";
 
 const Settings: React.FC = () => {
   const { 
@@ -92,6 +93,22 @@ const Settings: React.FC = () => {
         <h1 className="text-3xl font-bold">Settings</h1>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Profile Section */}
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Profile
+              </CardTitle>
+              <CardDescription>Personalize your experience.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="max-w-sm">
+                <UserNameInput />
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Expense Categories */}
           <Card>
             <CardHeader>

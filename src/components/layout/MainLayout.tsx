@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Menu, Settings, Repeat, PieChart, Home, Target } from "lucide-react";
 import Sidebar from "./Sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { UserNameInput } from "@/components/UserNameInput";
 
 const MainLayout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -88,9 +87,6 @@ const MainLayout: React.FC = () => {
             </ul>
           </nav>
           <div className="flex items-center space-x-4">
-            <div className="hidden lg:block">
-              <UserNameInput />
-            </div>
             <ThemeToggle />
           </div>
         </div>
