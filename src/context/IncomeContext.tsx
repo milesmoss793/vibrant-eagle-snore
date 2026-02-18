@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useSecurity } from './SecurityContext';
+import { encryptData, decryptData, isJson } from '@/utils/encryption';
 
-// Define the shape of an income entry
 export interface Income {
   id: string;
   amount: number;
@@ -9,61 +10,64 @@ export interface Income {
   description?: string;
 }
 
-// Define the shape of the context value
 interface IncomeContextType {
   income: Income[];
   addIncome: (income: Omit<Income, 'id'>) => void;
-  updateIncome: (updatedIncome: Income) => void; // New: Function to update an income entry
-  deleteIncome: (id: string) => void; // New: Function to delete an income entry
+  updateIncome: (updatedIncome: Income) => void;
+  deleteIncome: (id: string) => void;
 }
 
-// Create the context
 const IncomeContext = createContext<IncomeContextType | undefined>(undefined);
-
-// Key for localStorage
 const LOCAL_STORAGE_KEY = 'expenseTrackerIncome';
 
-// Create the provider component
 export const IncomeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [income, setIncome] = useState<Income[]>(() => {
-    // Load income from localStorage on initial render
+  const { encryptionKey } = useSecurity();
+  const [income, setIncome] = useState<Income[]>([]);
+
+  useEffect(() => {
+    if (!encryptionKey) return;
     try {
-      const storedIncome = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (storedIncome) {
-        // Parse dates back into Date objects
-        return JSON.parse(storedIncome).map((entry: Income) => ({
+      const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (stored) {
+        let rawData = stored;
+        if (!isJson(stored)) {
+          const decrypted = decryptData(stored, encryptionKey);
+          if (decrypted) rawData = decrypted;
+        }
+        const parsed = JSON.parse(rawData).map((entry: any) => ({
           ...entry,
           date: new Date(entry.date),
         }));
+        setIncome(parsed);
       }
     } catch (error) {
-      console.error("Failed to load income from localStorage:", error);
+      console.error("Failed to load income:", error);
     }
-    return [];
-  });
+  }, [encryptionKey]);
 
-  // Save income to localStorage whenever it changes
   useEffect(() => {
+    if (!encryptionKey || income.length === 0 && !localStorage.getItem(LOCAL_STORAGE_KEY)) return;
     try {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(income));
+      const encrypted = encryptData(JSON.stringify(income), encryptionKey);
+      localStorage.setItem(LOCAL_STORAGE_KEY, encrypted);
     } catch (error) {
-      console.error("Failed to save income to localStorage:", error);
+      console.error("Failed to save income:", error);
     }
-  }, [income]);
+  }, [income, encryptionKey]);
 
   const addIncome = (newIncome: Omit<Income, 'id'>) => {
-    const incomeWithId = { ...newIncome, id: Date.now().toString() }; // Simple ID generation
-    setIncome((prevIncome) => [...prevIncome, incomeWithId]);
+    const incomeWithId = { ...newIncome, id: Date.now().toString() };
+    setIncome((prev) => [...prev, incomeWithId]);
   };
 
   const updateIncome = (updatedIncome: Income) => {
-    setIncome((prevIncome) =>
-      prevIncome.map((inc) => (inc.id === updatedIncome.id ? updatedIncome : inc))
+    setIncome((prev) =>
+      prev.map((inc) => (inc.id === updatedIncome.id ? updatedIncome : inc))
     );
   };
 
   const deleteIncome = (id: string) => {
-    setIncome((prevIncome) => prevIncome.filter((inc) => inc.id !== id));
+    setIncome((prev) => prev.filter((inc) => inc.id !== id));
   };
 
   return (
@@ -73,7 +77,6 @@ export const IncomeProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   );
 };
 
-// Custom hook to use the income context
 export const useIncome = () => {
   const context = useContext(IncomeContext);
   if (context === undefined) {

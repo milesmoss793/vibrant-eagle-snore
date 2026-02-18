@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useSecurity } from './SecurityContext';
+import { encryptData, decryptData, isJson } from '@/utils/encryption';
 
 export interface Budget {
   category: string;
@@ -12,23 +14,38 @@ interface BudgetContextType {
 }
 
 const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
-
 const LOCAL_STORAGE_KEY = 'expenseTracker_budgets';
 
 export const BudgetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [budgets, setBudgets] = useState<Budget[]>(() => {
-    try {
-      const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch (error) {
-      console.error("Failed to load budgets:", error);
-      return [];
-    }
-  });
+  const { encryptionKey } = useSecurity();
+  const [budgets, setBudgets] = useState<Budget[]>([]);
 
   useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(budgets));
-  }, [budgets]);
+    if (!encryptionKey) return;
+    try {
+      const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (stored) {
+        let rawData = stored;
+        if (!isJson(stored)) {
+          const decrypted = decryptData(stored, encryptionKey);
+          if (decrypted) rawData = decrypted;
+        }
+        setBudgets(JSON.parse(rawData));
+      }
+    } catch (error) {
+      console.error("Failed to load budgets:", error);
+    }
+  }, [encryptionKey]);
+
+  useEffect(() => {
+    if (!encryptionKey || budgets.length === 0 && !localStorage.getItem(LOCAL_STORAGE_KEY)) return;
+    try {
+      const encrypted = encryptData(JSON.stringify(budgets), encryptionKey);
+      localStorage.setItem(LOCAL_STORAGE_KEY, encrypted);
+    } catch (error) {
+      console.error("Failed to save budgets:", error);
+    }
+  }, [budgets, encryptionKey]);
 
   const setBudget = (category: string, amount: number) => {
     setBudgets((prev) => {

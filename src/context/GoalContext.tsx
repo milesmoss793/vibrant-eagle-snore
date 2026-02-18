@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useSecurity } from './SecurityContext';
+import { encryptData, decryptData, isJson } from '@/utils/encryption';
 
 export interface Goal {
   id: string;
@@ -18,28 +20,42 @@ interface GoalContextType {
 }
 
 const GoalContext = createContext<GoalContextType | undefined>(undefined);
-
 const LOCAL_STORAGE_KEY = 'expenseTracker_goals';
 
 export const GoalProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [goals, setGoals] = useState<Goal[]>(() => {
+  const { encryptionKey } = useSecurity();
+  const [goals, setGoals] = useState<Goal[]>([]);
+
+  useEffect(() => {
+    if (!encryptionKey) return;
     try {
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (stored) {
-        return JSON.parse(stored).map((g: any) => ({
+        let rawData = stored;
+        if (!isJson(stored)) {
+          const decrypted = decryptData(stored, encryptionKey);
+          if (decrypted) rawData = decrypted;
+        }
+        const parsed = JSON.parse(rawData).map((g: any) => ({
           ...g,
           deadline: g.deadline ? new Date(g.deadline) : undefined,
         }));
+        setGoals(parsed);
       }
     } catch (error) {
       console.error("Failed to load goals:", error);
     }
-    return [];
-  });
+  }, [encryptionKey]);
 
   useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(goals));
-  }, [goals]);
+    if (!encryptionKey || goals.length === 0 && !localStorage.getItem(LOCAL_STORAGE_KEY)) return;
+    try {
+      const encrypted = encryptData(JSON.stringify(goals), encryptionKey);
+      localStorage.setItem(LOCAL_STORAGE_KEY, encrypted);
+    } catch (error) {
+      console.error("Failed to save goals:", error);
+    }
+  }, [goals, encryptionKey]);
 
   const addGoal = (newGoal: Omit<Goal, 'id'>) => {
     const goalWithId: Goal = { ...newGoal, id: Date.now().toString() };
