@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Home, DollarSign, TrendingUp, PlusCircle, Wallet, Settings, Repeat, PieChart, Target } from "lucide-react";
+import { Home, DollarSign, TrendingUp, PlusCircle, Wallet, Settings, Repeat, PieChart, Target, Sword } from "lucide-react";
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { name: "Budgets", path: "/budgets", icon: PieChart },
     { name: "Goals", path: "/goals", icon: Target },
     { name: "Recurring", path: "/recurring", icon: Repeat },
+    { name: "RPG Game", path: "/game", icon: Sword },
     { name: "Settings", path: "/settings", icon: Settings },
   ];
 

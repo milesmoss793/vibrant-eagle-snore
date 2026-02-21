@@ -75,6 +75,8 @@ const RecurringManager: React.FC = () => {
     switch (frequency) {
       case 'daily': return addDays(date, 1);
       case 'weekly': return addWeeks(date, 1);
+      case 'bi-weekly': return addWeeks(date, 2);
+      case 'three-weeks': return addWeeks(date, 3);
       case 'monthly': return addMonths(date, 1);
       case 'yearly': return addYears(date, 1);
       default: return date;

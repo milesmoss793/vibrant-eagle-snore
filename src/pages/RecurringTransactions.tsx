@@ -36,7 +36,7 @@ const recurringFormSchema = z.object({
   type: z.enum(['expense', 'income']),
   amount: z.coerce.number().min(0.01, { message: "Amount must be positive." }),
   categoryOrSource: z.string().min(1, { message: "Please select a category or source." }),
-  frequency: z.enum(['daily', 'weekly', 'monthly', 'yearly']),
+  frequency: z.enum(['daily', 'weekly', 'bi-weekly', 'three-weeks', 'monthly', 'yearly']),
   startDate: z.date({ required_error: "A start date is required." }),
   endDate: z.date().optional(),
   description: z.string().optional(),
@@ -172,6 +172,8 @@ const RecurringTransactions: React.FC = () => {
                         <SelectContent>
                           <SelectItem value="daily">Daily</SelectItem>
                           <SelectItem value="weekly">Weekly</SelectItem>
+                          <SelectItem value="bi-weekly">Bi-weekly</SelectItem>
+                          <SelectItem value="three-weeks">Every 3 weeks</SelectItem>
                           <SelectItem value="monthly">Monthly</SelectItem>
                           <SelectItem value="yearly">Yearly</SelectItem>
                         </SelectContent>
@@ -267,7 +269,7 @@ const RecurringTransactions: React.FC = () => {
                         <TableCell className={t.type === 'expense' ? 'text-red-600' : 'text-green-600'}>
                           ${t.amount.toFixed(2)}
                         </TableCell>
-                        <TableCell className="capitalize">{t.frequency}</TableCell>
+                        <TableCell className="capitalize">{t.frequency.replace('-', ' ')}</TableCell>
                         <TableCell>
                           {t.lastProcessedDate 
                             ? format(new Date(t.lastProcessedDate), "MMM dd") 

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-export type Frequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
+export type Frequency = 'daily' | 'weekly' | 'bi-weekly' | 'three-weeks' | 'monthly' | 'yearly';
 
 export interface RecurringTransaction {
   id: string;
