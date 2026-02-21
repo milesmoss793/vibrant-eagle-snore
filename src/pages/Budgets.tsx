@@ -22,8 +22,11 @@ const Budgets: React.FC = () => {
   const { expenseCategories } = useCategories();
   const { expenses } = useExpenses();
   const [editCategory, setEditCategory] = useState<string | null>(null);
-  const [amount, setAmount] = useState("");
+  const [editAmount, setEditAmount] = useState("");
+  
+  // New budget state
   const [selectedNewCategory, setSelectedNewCategory] = useState<string>("");
+  const [newBudgetAmount, setNewBudgetAmount] = useState("");
 
   const now = new Date();
   const monthStart = startOfMonth(now);
@@ -35,21 +38,32 @@ const Budgets: React.FC = () => {
       .reduce((sum, e) => sum + e.amount, 0);
   };
 
-  const handleSave = (category: string) => {
-    const val = parseFloat(amount);
+  const handleSaveEdit = (category: string) => {
+    const val = parseFloat(editAmount);
     if (!isNaN(val) && val >= 0) {
       setBudget(category, val);
       setEditCategory(null);
-      setAmount("");
+      setEditAmount("");
       toast({ title: "Budget Updated", description: `Budget for ${category} set to $${val.toFixed(2)}` });
     }
   };
 
   const handleAddBudget = () => {
-    if (selectedNewCategory) {
-      setEditCategory(selectedNewCategory);
-      setAmount("");
+    const val = parseFloat(newBudgetAmount);
+    if (selectedNewCategory && !isNaN(val) && val >= 0) {
+      setBudget(selectedNewCategory, val);
       setSelectedNewCategory("");
+      setNewBudgetAmount("");
+      toast({ 
+        title: "Budget Added", 
+        description: `Monthly limit for ${selectedNewCategory} set to $${val.toFixed(2)}` 
+      });
+    } else if (isNaN(val) || val < 0) {
+      toast({ 
+        title: "Invalid Amount", 
+        description: "Please enter a valid positive number for the budget limit.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -66,10 +80,10 @@ const Budgets: React.FC = () => {
         </div>
         
         {availableCategories.length > 0 && (
-          <div className="flex items-center gap-2 w-full md:w-auto">
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto bg-muted/30 p-3 rounded-lg border border-dashed">
             <Select value={selectedNewCategory} onValueChange={setSelectedNewCategory}>
-              <SelectTrigger className="w-full md:w-[200px]">
-                <SelectValue placeholder="Select category..." />
+              <SelectTrigger className="w-full sm:w-[160px]">
+                <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
                 {availableCategories.map((cat) => (
@@ -77,7 +91,17 @@ const Budgets: React.FC = () => {
                 ))}
               </SelectContent>
             </Select>
-            <Button onClick={handleAddBudget} disabled={!selectedNewCategory}>
+            <div className="relative w-full sm:w-[120px]">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+              <Input 
+                type="number" 
+                placeholder="Limit" 
+                className="pl-6"
+                value={newBudgetAmount}
+                onChange={(e) => setNewBudgetAmount(e.target.value)}
+              />
+            </div>
+            <Button onClick={handleAddBudget} disabled={!selectedNewCategory || !newBudgetAmount} className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Add Budget
             </Button>
@@ -91,7 +115,7 @@ const Budgets: React.FC = () => {
             <LayoutGrid className="h-12 w-12 text-muted-foreground opacity-20" />
             <div className="space-y-1">
               <p className="text-lg font-medium">No budgets set</p>
-              <p className="text-sm text-muted-foreground">Select a category above to start tracking your spending limits.</p>
+              <p className="text-sm text-muted-foreground">Select a category and set a limit above to start tracking.</p>
             </div>
           </CardContent>
         </Card>
@@ -104,7 +128,7 @@ const Budgets: React.FC = () => {
             const isOver = spent > budget.amount;
 
             return (
-              <Card key={category} className={isOver ? "border-destructive" : ""}>
+              <Card key={category} className={isOver ? "border-destructive shadow-sm" : "shadow-sm"}>
                 <CardHeader className="pb-2">
                   <CardTitle className="flex justify-between items-center">
                     <span>{category}</span>
@@ -130,18 +154,18 @@ const Budgets: React.FC = () => {
                       <Input
                         type="number"
                         placeholder="Amount"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
+                        value={editAmount}
+                        onChange={(e) => setEditAmount(e.target.value)}
                         autoFocus
                       />
-                      <Button size="sm" onClick={() => handleSave(category)}>Save</Button>
+                      <Button size="sm" onClick={() => handleSaveEdit(category)}>Save</Button>
                       <Button size="sm" variant="ghost" onClick={() => setEditCategory(null)}>Cancel</Button>
                     </div>
                   ) : (
                     <div className="flex gap-2 pt-2">
                       <Button variant="outline" size="sm" className="w-full" onClick={() => {
                         setEditCategory(category);
-                        setAmount(budget.amount.toString());
+                        setEditAmount(budget.amount.toString());
                       }}>
                         Edit Limit
                       </Button>
