@@ -16,7 +16,7 @@ const LOCAL_STORAGE_INCOME_SOURCES = 'expenseTracker_incomeSources';
 
 const defaultExpenseCategories = [
   "Food", "Transport", "Utilities", "Entertainment", "Shopping", 
-  "Healthcare", "Education", "Rent", "Salary", "Other"
+  "Healthcare", "Education", "Rent", "Other"
 ];
 
 const defaultIncomeSources = [
