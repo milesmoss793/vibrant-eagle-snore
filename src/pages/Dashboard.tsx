@@ -2,7 +2,6 @@ import React, { useState, useMemo } from "react";
 import { useExpenses } from "@/context/ExpenseContext";
 import { useIncome } from "@/context/IncomeContext";
 import { useBudgets } from "@/context/BudgetContext";
-import { useRecurring } from "@/context/RecurringContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -13,25 +12,21 @@ import {
 } from "@/components/ui/select";
 import FinancialCharts from "@/components/charts/FinancialCharts";
 import { format, startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear, isSameMonth } from "date-fns";
-import { 
-  AlertCircle, 
-  TrendingDown, 
-  PlusCircle, 
-  Wallet, 
-  Target
-} from "lucide-react";
+import { AlertCircle, TrendingDown } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { getCategoryIcon } from "@/utils/icons";
 import MetricGrid from "@/components/dashboard/MetricGrid";
+import WelcomeHeader from "@/components/dashboard/WelcomeHeader";
+import QuickActions from "@/components/dashboard/QuickActions";
+import BudgetSummary from "@/components/dashboard/BudgetSummary";
 
 const Dashboard: React.FC = () => {
   const { expenses } = useExpenses();
   const { income } = useIncome();
   const { budgets } = useBudgets();
-  const { recurringTransactions } = useRecurring();
   const [timePeriod, setTimePeriod] = useState<"month" | "3months" | "6months" | "year" | "all">("month");
 
   const filteredData = useMemo(() => {
@@ -100,7 +95,7 @@ const Dashboard: React.FC = () => {
     }).filter(Boolean);
   }, [budgets, expenses]);
 
-  const budgetSummary = useMemo(() => {
+  const budgetSummaryData = useMemo(() => {
     const now = new Date();
     const monthStart = startOfMonth(now);
     const monthEnd = endOfMonth(now);
@@ -146,10 +141,7 @@ const Dashboard: React.FC = () => {
         )}
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-            <p className="text-muted-foreground">Welcome back! Here's your financial summary.</p>
-          </div>
+          <WelcomeHeader />
           <Select value={timePeriod} onValueChange={(value: any) => setTimePeriod(value)}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Select time period" />
@@ -205,50 +197,8 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-2 gap-2">
-                <Button asChild className="w-full h-20 flex flex-col gap-1">
-                  <Link to="/add-expense">
-                    <PlusCircle className="h-5 w-5" />
-                    <span>Add Expense</span>
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" className="w-full h-20 flex flex-col gap-1">
-                  <Link to="/add-income">
-                    <Wallet className="h-5 w-5" />
-                    <span>Add Income</span>
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-
-            {budgetSummary.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Target className="h-5 w-5 text-primary" />
-                    Budget Progress
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {budgetSummary.map((b) => (
-                    <div key={b.category} className="space-y-1">
-                      <div className="flex justify-between text-xs">
-                        <span className="font-medium">{b.category}</span>
-                        <span>${b.spent.toFixed(0)} / ${b.amount.toFixed(0)}</span>
-                      </div>
-                      <Progress value={b.percent} className={`h-1.5 ${b.percent > 100 ? 'bg-destructive/20' : ''}`} />
-                    </div>
-                  ))}
-                  <Button variant="ghost" size="sm" className="w-full text-xs" asChild>
-                    <Link to="/budgets">View All Budgets</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
+            <QuickActions />
+            <BudgetSummary budgets={budgetSummaryData} />
 
             <Card>
               <CardHeader>
