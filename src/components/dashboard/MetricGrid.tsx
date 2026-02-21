@@ -8,7 +8,8 @@ import {
   ArrowRightLeft, 
   PieChart, 
   Maximize2, 
-  Minimize2 
+  Minimize2,
+  Wallet
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,7 @@ interface MetricGridProps {
     totalExpenses: number;
     netBalance: number;
     savingsRate: number;
+    netWorth: number;
     comparison: {
       income: { diff: number; percent: number };
       expenses: { diff: number; percent: number };
@@ -48,19 +50,19 @@ const MetricGrid: React.FC<MetricGridProps> = ({ stats }) => {
       type: "expense"
     },
     {
-      title: "Net Balance",
-      value: stats.netBalance,
-      icon: ArrowRightLeft,
-      color: stats.netBalance >= 0 ? "text-blue-600" : "text-red-600",
-      bgColor: "bg-blue-100",
-      type: "balance"
+      title: "Net Worth",
+      value: stats.netWorth,
+      icon: Wallet,
+      color: stats.netWorth >= 0 ? "text-primary" : "text-red-600",
+      bgColor: "bg-primary/10",
+      type: "worth"
     },
     {
       title: "Savings Rate",
       value: stats.savingsRate,
       icon: PieChart,
-      color: "text-primary",
-      bgColor: "bg-primary/10",
+      color: "text-blue-600",
+      bgColor: "bg-blue-100",
       type: "savings"
     }
   ];
@@ -78,9 +80,16 @@ const MetricGrid: React.FC<MetricGridProps> = ({ stats }) => {
       >
         {metrics.map((m, i) => (
           <Card key={i} className={cn(
-            "transition-all duration-300 hover:shadow-md border-primary/10",
-            !isExpanded && "p-2"
+            "transition-all duration-300 hover:shadow-lg border-primary/10 overflow-hidden relative",
+            !isExpanded && "p-2",
+            isExpanded && "hover:-translate-y-1"
           )}>
+            <div className={cn(
+              "absolute top-0 left-0 w-1 h-full",
+              m.type === 'income' ? "bg-green-500" : 
+              m.type === 'expense' ? "bg-red-500" : 
+              m.type === 'worth' ? "bg-primary" : "bg-blue-500"
+            )} />
             <CardHeader className={cn(
               "flex flex-row items-center justify-between space-y-0",
               isExpanded ? "pb-2" : "p-2 pb-1"
@@ -102,7 +111,8 @@ const MetricGrid: React.FC<MetricGridProps> = ({ stats }) => {
                 isExpanded ? "text-2xl" : "text-lg",
                 m.type === 'income' && "text-green-600",
                 m.type === 'expense' && "text-red-600",
-                m.type === 'balance' && (stats.netBalance >= 0 ? "text-blue-600" : "text-red-600")
+                m.type === 'worth' && (stats.netWorth >= 0 ? "text-primary" : "text-red-600"),
+                m.type === 'savings' && "text-blue-600"
               )}>
                 {m.type === 'savings' ? `${m.value.toFixed(1)}%` : `$${m.value.toFixed(2)}`}
               </div>
@@ -126,8 +136,8 @@ const MetricGrid: React.FC<MetricGridProps> = ({ stats }) => {
                   {m.type === 'savings' && (
                     <Progress value={Math.max(0, Math.min(100, m.value))} className="h-1.5 mt-2" />
                   )}
-                  {m.type === 'balance' && (
-                    <p className="text-[10px] text-muted-foreground">Total savings/loss</p>
+                  {m.type === 'worth' && (
+                    <p className="text-[10px] text-muted-foreground">Total lifetime balance</p>
                   )}
                 </div>
               )}
@@ -136,8 +146,8 @@ const MetricGrid: React.FC<MetricGridProps> = ({ stats }) => {
         ))}
       </div>
       
-      <div className="absolute -top-3 -right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-        <Badge variant="secondary" className="h-6 w-6 p-0 flex items-center justify-center rounded-full shadow-sm border">
+      <div className="absolute -top-3 -right-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+        <Badge variant="secondary" className="h-6 w-6 p-0 flex items-center justify-center rounded-full shadow-sm border cursor-pointer">
           {isExpanded ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />}
         </Badge>
       </div>

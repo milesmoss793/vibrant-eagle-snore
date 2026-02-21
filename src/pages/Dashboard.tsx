@@ -64,6 +64,11 @@ const Dashboard: React.FC = () => {
     const netBalance = totalIncome - totalExpenses;
     const savingsRate = totalIncome > 0 ? (netBalance / totalIncome) * 100 : 0;
 
+    // All-time Net Worth
+    const allTimeExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+    const allTimeIncome = income.reduce((sum, i) => sum + i.amount, 0);
+    const netWorth = allTimeIncome - allTimeExpenses;
+
     const now = new Date();
     const lastMonth = subMonths(now, 1);
     const thisMonthExp = expenses.filter(e => isSameMonth(e.date, now)).reduce((sum, e) => sum + e.amount, 0);
@@ -76,6 +81,7 @@ const Dashboard: React.FC = () => {
       totalIncome,
       netBalance,
       savingsRate,
+      netWorth,
       comparison: {
         expenses: { diff: thisMonthExp - lastMonthExp, percent: lastMonthExp ? ((thisMonthExp - lastMonthExp) / lastMonthExp) * 100 : 0 },
         income: { diff: thisMonthInc - lastMonthInc, percent: lastMonthInc ? ((thisMonthInc - lastMonthInc) / lastMonthInc) * 100 : 0 }
