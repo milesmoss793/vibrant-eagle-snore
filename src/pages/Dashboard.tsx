@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import FinancialCharts from "@/components/charts/FinancialCharts";
 import { format, startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear, isSameMonth } from "date-fns";
-import { AlertCircle, TrendingDown } from "lucide-react";
+import { AlertCircle, TrendingDown, History } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ import MetricGrid from "@/components/dashboard/MetricGrid";
 import WelcomeHeader from "@/components/dashboard/WelcomeHeader";
 import QuickActions from "@/components/dashboard/QuickActions";
 import BudgetSummary from "@/components/dashboard/BudgetSummary";
+import GoalProgress from "@/components/dashboard/GoalProgress";
 
 const Dashboard: React.FC = () => {
   const { expenses } = useExpenses();
@@ -120,7 +121,7 @@ const Dashboard: React.FC = () => {
       ...expenses.map(e => ({ ...e, type: 'expense' as const })),
       ...income.map(i => ({ ...i, type: 'income' as const }))
     ].sort((a, b) => b.date.getTime() - a.date.getTime());
-    return all.slice(0, 5);
+    return all.slice(0, 6);
   }, [expenses, income]);
 
   return (
@@ -163,29 +164,38 @@ const Dashboard: React.FC = () => {
             <FinancialCharts expenses={filteredData.expenses} income={filteredData.income} timePeriod={timePeriod as any} />
             
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Recent Transactions</CardTitle>
-                <Button variant="ghost" size="sm" asChild>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="flex items-center gap-2">
+                  <History className="h-5 w-5 text-muted-foreground" />
+                  Recent Activity
+                </CardTitle>
+                <Button variant="ghost" size="sm" className="text-xs" asChild>
                   <Link to="/view-expenses">View All</Link>
                 </Button>
               </CardHeader>
               <CardContent>
                 {recentTransactions.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-4">No transactions recorded yet.</p>
+                  <p className="text-center text-muted-foreground py-8">No transactions recorded yet.</p>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-1">
                     {recentTransactions.map((t) => (
-                      <div key={t.id} className="flex items-center justify-between p-2 hover:bg-muted/50 rounded-lg transition-colors">
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-full ${t.type === 'expense' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+                      <div key={t.id} className="flex items-center justify-between p-3 hover:bg-muted/50 rounded-xl transition-all group">
+                        <div className="flex items-center gap-4">
+                          <div className={`p-2.5 rounded-full transition-colors ${
+                            t.type === 'expense' 
+                              ? 'bg-red-50 text-red-600 group-hover:bg-red-100' 
+                              : 'bg-green-50 text-green-600 group-hover:bg-green-100'
+                          }`}>
                             {getCategoryIcon('category' in t ? t.category : t.source)}
                           </div>
                           <div className="flex flex-col">
-                            <span className="font-medium text-sm">{'category' in t ? t.category : t.source}</span>
-                            <span className="text-xs text-muted-foreground">{format(t.date, "MMM dd, yyyy")}</span>
+                            <span className="font-semibold text-sm">{'category' in t ? t.category : t.source}</span>
+                            <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                              {format(t.date, "MMM dd")} • {t.description || "No description"}
+                            </span>
                           </div>
                         </div>
-                        <div className={`font-bold ${t.type === 'expense' ? 'text-red-600' : 'text-green-600'}`}>
+                        <div className={`font-bold text-sm ${t.type === 'expense' ? 'text-red-600' : 'text-green-600'}`}>
                           {t.type === 'expense' ? '-' : '+'}${t.amount.toFixed(2)}
                         </div>
                       </div>
@@ -198,27 +208,28 @@ const Dashboard: React.FC = () => {
 
           <div className="space-y-6">
             <QuickActions />
+            <GoalProgress />
             <BudgetSummary budgets={budgetSummaryData} />
 
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingDown className="h-5 w-5 text-red-600" />
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm font-bold">
+                  <TrendingDown className="h-4 w-4 text-red-600" />
                   Top Spending
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {topCategories.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No expenses yet.</p>
+                  <p className="text-xs text-muted-foreground italic">No expenses recorded for this period.</p>
                 ) : (
                   topCategories.map(([category, amount]) => (
-                    <div key={category} className="space-y-1">
-                      <div className="flex justify-between text-sm">
+                    <div key={category} className="space-y-1.5">
+                      <div className="flex justify-between text-xs">
                         <div className="flex items-center gap-2">
-                          {getCategoryIcon(category)}
+                          <span className="opacity-70">{getCategoryIcon(category)}</span>
                           <span className="font-medium">{category}</span>
                         </div>
-                        <span>${amount.toFixed(2)}</span>
+                        <span className="font-semibold">${amount.toFixed(0)}</span>
                       </div>
                       <Progress value={(amount / stats.totalExpenses) * 100} className="h-1" />
                     </div>
